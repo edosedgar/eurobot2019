@@ -12,26 +12,26 @@ void TIM6_DAC_IRQHandler(void)
 	if (MOTOR_CONTROL_TIM_MODULE->SR & TIM_SR_UIF)
 	{
 		timClearStatusRegisterFlag(MOTOR_CONTROL_TIM_MODULE, TIM_SR_UIF);
-		
+
 		// Disable interrupt of servo checkers and collision avoidance to prevent interference
-		__NVIC_DisableIRQ(SERVO_CHECKER_IRQN);
-		__NVIC_DisableIRQ(COLL_AVOID_IRQN);
-		
+		NVIC_DisableIRQ(SERVO_CHECKER_IRQN);
+		NVIC_DisableIRQ(COLL_AVOID_IRQN);
+
 		// Read data from Encoders (Encoders -> wheelsSpeed (+ wheelsCoord) -> robotSpeedCs1 (+ robotCoordCs1) )
 		readEnc();
-		
+
 		// Calculate global speed and coordinate (robotSpeedCs1 -> robotSpeedCsGlobal (+ robotCoordCsGlobal))
 		calcGlobSpeedAndCoord();
-		
+
 		// Update robot status
 		updateRobotStatus();
-		
+
 		// Odometry Movement
 		if (Robot.odometryMovingStatusFlag)
 		{
 			// Check if we reached target position or not
 			checkIfPositionIsReached();
-			
+
 			// Calculate speed for current moment
 			speedRecalculation();
 		}
@@ -39,7 +39,7 @@ void TIM6_DAC_IRQHandler(void)
 		{
 			// TBD
 		}
-		
+
 		// Collision avoidance
 		if (Robot.collisionAvoidanceStatusFlag)
 		{
@@ -49,18 +49,18 @@ void TIM6_DAC_IRQHandler(void)
 		// Calculation of forward kinematics
 		if (Robot.forwardKinCalcStatusFlag)
 		{
-			
+
 			// Calculate Forward kinematics ( robotTargetSpeedCs1 -> robotTargetMotorSpeedCs1)
 			calcForwardKin();
-			
+
 			// Set speeds for motors (robotTargetMotorSpeedCs1 -> PWM)
 			setMotorSpeeds();
 		}
-		
+
 		// Enable interrupt of servo checkers and collision avoidance back
-		__NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
-		__NVIC_EnableIRQ(COLL_AVOID_IRQN);
-		
+		NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
+		NVIC_EnableIRQ(COLL_AVOID_IRQN);
+
 	}
 	return;
 }
@@ -75,7 +75,7 @@ void I2C2_ER_IRQHandler()
 		CLEAR_BIT(I2C_MODULE->SR1, I2C_SR1_ARLO);
 		I2CModule.status = I2C_ARBITRATION_LOST_ERROR;
 		return;
-	}	
+	}
 	// Acknowledge error
 	if (READ_BIT(I2C_MODULE->SR1, I2C_SR1_AF))
 	{
@@ -101,7 +101,7 @@ void TIM7_IRQHandler()
 	if (LOCAL_TIME_TIM_MODULE->SR & TIM_SR_UIF)
 	{
 		timClearStatusRegisterFlag(LOCAL_TIME_TIM_MODULE, TIM_SR_UIF);
-		
+
 		// Increase absolute time by one tenth of a millisecond
 		timeInOneTenthOfMillisecond ++;
 	}
@@ -112,11 +112,11 @@ void TIM7_IRQHandler()
 //void EXTI1_IRQHandler(void)
 //{
 //	// if startup switch is source
-//	if(EXTI->PR & (0x01 << EXTI_STARTUP_PIN)) 
-//	{  
+//	if(EXTI->PR & (0x01 << EXTI_STARTUP_PIN))
+//	{
 //		// Clear Interrupt flag
 //		EXTI->PR |= 0x01 << EXTI_STARTUP_PIN;
-//		
+//
 //		// Change status of startup flag
 //		Robot.startupInterruptStatusFlag = 0x01;
 //	}
@@ -126,11 +126,11 @@ void TIM7_IRQHandler()
 //void EXTI0_IRQHandler(void)
 //{
 //	// if startup clear switch is source
-//	if(EXTI->PR & (0x01 << EXTI_CLEAR_STARTUP_PIN)) 
-//	{  
+//	if(EXTI->PR & (0x01 << EXTI_CLEAR_STARTUP_PIN))
+//	{
 //		// Clear Interrupt flag
 //		EXTI->PR |= 0x01 << EXTI_CLEAR_STARTUP_PIN;
-//		
+//
 //		// Change status of startup flag
 //		Robot.startupInterruptStatusFlag = 0x00;
 //	}
@@ -166,7 +166,7 @@ uint32_t getTimeDifference(uint32_t startTime)
 {
 	uint32_t diff;
 	// turn off IRQN
-	__NVIC_DisableIRQ(LOCAL_TIME_IRQN);
+	NVIC_DisableIRQ(LOCAL_TIME_IRQN);
 	if (timeInOneTenthOfMillisecond >= startTime)
 	{
 		diff = (timeInOneTenthOfMillisecond - startTime);
@@ -177,7 +177,7 @@ uint32_t getTimeDifference(uint32_t startTime)
 
 	}
 	// turn IRQN back on
-	__NVIC_EnableIRQ(LOCAL_TIME_IRQN);
+	NVIC_EnableIRQ(LOCAL_TIME_IRQN);
 	return diff;
 }
 uint8_t checkTimeout(uint32_t startTime, uint32_t timeout)
@@ -191,7 +191,7 @@ uint8_t checkTimeout(uint32_t startTime, uint32_t timeout)
 	else
 	{
 		// Timeout is not exceeded
-		return 0x00;	
+		return 0x00;
 	}
 }
 void delayInTenthOfMs(uint16_t delay)
@@ -199,7 +199,7 @@ void delayInTenthOfMs(uint16_t delay)
 	uint32_t startTime = getLocalTime();
 	while(!checkTimeout(startTime, delay))
 	{
-		
+
 	}
 	return;
 }

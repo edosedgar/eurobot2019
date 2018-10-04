@@ -220,7 +220,7 @@ TVector addition( TVector a,  TVector b)
 TVector normalization( TVector a, float len)
 {
      TVector result   ;
-  float mod = pow(a.x * a.x + a.y * a.y, 0.5) ;
+  float mod = pow2(a.x * a.x + a.y * a.y, 0.5) ;
   if (mod > 0) {
 	float k = len/mod;
 
@@ -240,5 +240,5 @@ TVector scale( TVector a, float k)
 
 float mod( TVector a)
 {
-  return pow(a.x * a.x + a.y * a.y, 0.5);
+  return pow2(a.x * a.x + a.y * a.y, 0.5);
 }

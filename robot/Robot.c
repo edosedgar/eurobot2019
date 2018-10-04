@@ -1,6 +1,6 @@
 #include "Robot.h"
 
-// Struct for current robot status 
+// Struct for current robot status
 RobotStatus Robot;
 
 // Struct for odometry movement
@@ -38,12 +38,12 @@ uint32_t timeOfStart;
 void turnEverythingOff()
 {
 	// Global disable of interrupts
-	
+
 	__disable_irq();
-	
+
 	// Turn off dynamixels
 	gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_HIGH);
-	
+
 	// Turn off maxons
 	uint8_t i;
 	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
@@ -53,7 +53,7 @@ void turnEverythingOff()
 	}
 	while (1)
 	{
-		
+
 	}
 }
 
@@ -64,14 +64,14 @@ void calcGlobSpeedAndCoord(void)
 {
 	float alphaRobot = robotCoordCsGlobal[2];
 	// Calculation of matrix that transforms speed from robot coordinate system to global one
-	float transfMatrix [2][2] = { {cos(alphaRobot), -sin(alphaRobot)},
-	                              {sin(alphaRobot), cos(alphaRobot)}};
+	float transfMatrix [2][2] = { {cosf(alphaRobot), -sinf(alphaRobot)},
+	                              {sinf(alphaRobot), cosf(alphaRobot)}};
 	// Transformation
 	// Linear speeds
 	matrixMultiplyM2M(&transfMatrix[0][0], 2, 2, &robotSpeedCs1[0], 2, 1, &robotSpeedCsGlobal[0]);
 	// Rotational speed
 	robotSpeedCsGlobal[2] = robotSpeedCs1[2];
-								  
+
 	// Coordinates' increment calculation
 	robotCoordCsGlobal[0] += robotSpeedCsGlobal[0] * lastTimeIntervalSec;
 	robotCoordCsGlobal[1] += robotSpeedCsGlobal[1] * lastTimeIntervalSec;
@@ -88,7 +88,7 @@ void readEnc(void)
 	uint8_t i;
 	// Buffer for encoders' ticks
 	int16_t encTicksBuf[ROBOT_NUMBER_OF_MOTORS];
-	
+
 	#ifdef ENCODER_IMITATION
 	// Imitation of movement
 	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
@@ -103,17 +103,17 @@ void readEnc(void)
 		encTicksBuf[i] = *encCnt[i] - ENCODER_CNT_INITIAL_VALUE;
 		*encCnt[i] = ENCODER_CNT_INITIAL_VALUE;
 	}
-	
+
 	// Calculate time interval between current and last data acquisition
 	lastTimeIntervalSec = (float)(getTimeDifference(timeofLastOdometryDataAcquisition)) / 10000;
 	timeofLastOdometryDataAcquisition = getLocalTime();
-	
+
 	// Check for appropriate values that can possibly cause Nan errors
 	if (lastTimeIntervalSec == 0.0f)
 	{
 		return;
 	}
-	
+
 	// Calculate speeds
 	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
 	{
@@ -122,18 +122,18 @@ void readEnc(void)
 		// Now one motor (1st and 4rd) is especial (20.02.2018)
 		if ((i == 0) || (i == 3))
 		{
-			wheelsSpeed[i] = (float)(encTicksBuf[i]) * TICKS_TO_RAD_COEF_LONG / (lastTimeIntervalSec);	
+			wheelsSpeed[i] = (float)(encTicksBuf[i]) * TICKS_TO_RAD_COEF_LONG / (lastTimeIntervalSec);
 		}
 	}
 	#endif
-	
+
 	// Inverse motors 2 and 3 because of cylindrical transmission (Positive direction is CCW)
 	wheelsSpeed[1] = - wheelsSpeed[1];
 	wheelsSpeed[2] = - wheelsSpeed[2];
-	
+
 	// Calculate inverse kinematics (wheelsSpeed -> robotSpeedCs1)
 	calcInverseKin();
-	
+
 	// Calculate instanteneous coordinates in robot coordinate system
 	for (i = 0x00; i < 0x03; i++)
 	{
@@ -151,26 +151,26 @@ void calcForwardKin(void)
 	float vLine[ROBOT_NUMBER_OF_MOTORS], vRot[ROBOT_NUMBER_OF_MOTORS], vSum[ROBOT_NUMBER_OF_MOTORS];
 	float maxMotorSpeed;
 	float correctionCoef;
-	
+
 	// Note : matrix of forward kinematics already takes into account 2 cylindrical transmissions (wheels 2 and 4)
 	// Calculate linear speed
 	matrixMultiplyM2M(&MLineSpeed[0][0], ROBOT_NUMBER_OF_MOTORS, 3, &robotTargetSpeedCs1[0], 3, 1, &vLine[0]);
-	
+
 	// Calculate rotational speed
 	matrixMultiplyM2M(&MRotSpeed[0][0], ROBOT_NUMBER_OF_MOTORS, 3, &robotTargetSpeedCs1[0], 3, 1, &vRot[0]);
-	
+
 	// Sum speeds
 	matrixPlusMinus(&vLine[0], &vRot[0], ROBOT_NUMBER_OF_MOTORS, 1, 1, &vSum[0]);
-	
+
 	// Find max value all motor's speeds
 	maxValue(&vSum[0], ROBOT_NUMBER_OF_MOTORS, &maxMotorSpeed);
-	
+
 	// Check if we exceed maximum available motor speed
 	if (fabs(maxMotorSpeed) > MAX_ROT_SPEED)
 	{
 		correctionCoef = fabs(MAX_ROT_SPEED / maxMotorSpeed);
-	} 
-	else 
+	}
+	else
 	{
 		correctionCoef = 1.0;
 	}
@@ -184,26 +184,26 @@ void checkSaturation( float* targetSpeed)
 	float vLine[ROBOT_NUMBER_OF_MOTORS], vRot[ROBOT_NUMBER_OF_MOTORS], vSum[ROBOT_NUMBER_OF_MOTORS];
 	float maxMotorSpeed;
 	float correctionCoef;
-	
+
 	// Note : matrix of forward kinematics already takes into account 2 cylindrical transmissions (wheels 2 and 4)
 	// Calculate linear speed
 	matrixMultiplyM2M(&MLineSpeed[0][0], ROBOT_NUMBER_OF_MOTORS, 3, targetSpeed, 3, 1, vLine);
-	
+
 	// Calculate rotational speed
 	matrixMultiplyM2M(&MRotSpeed[0][0], ROBOT_NUMBER_OF_MOTORS, 3, targetSpeed, 3, 1, vRot);
-	
+
 	// Sum speeds
 	matrixPlusMinus(vLine, vRot, ROBOT_NUMBER_OF_MOTORS, 1, 1, vSum);
-	
+
 	// Find max value all motor's speeds
 	maxValue(vSum, ROBOT_NUMBER_OF_MOTORS, &maxMotorSpeed);
-	
+
 	// Check if we exceed maximum available motor speed
 	if (fabs(maxMotorSpeed) > MAX_ROT_SPEED)
 	{
 		correctionCoef = fabs(MAX_ROT_SPEED / maxMotorSpeed);
-	} 
-	else 
+	}
+	else
 	{
 		correctionCoef = 1.0;
 	}
@@ -228,10 +228,10 @@ void setMotorSpeed(uint8_t motorNumber, float speed)
 		return;
 	}
 	float duty;
-	
+
 	// Shift of motor numeration
 	motorNumber = motorNumber - 0x01;
-	
+
 	// Set direction
 	if (speed >= 0)
 	{
@@ -242,7 +242,7 @@ void setMotorSpeed(uint8_t motorNumber, float speed)
 		gpioPinSetLevel(motorDir[motorNumber].port, motorDir[motorNumber].number, GPIO_LEVEL_LOW);
 		speed = - speed;
 	}
-	
+
 	if (speed >= MAX_ROT_SPEED)
 	{
 		speed = MAX_ROT_SPEED;
@@ -253,7 +253,7 @@ void setMotorSpeed(uint8_t motorNumber, float speed)
 	}
 	// Calculate duty cycle
 	duty = speed*(float)ESCON_CALIBR_COEF_A + (float)ESCON_CALIBR_COEF_B;
-	
+
 	// Change PWM
 	timPwmChangeDutyCycle(motorPwmCh[motorNumber].timModule, motorPwmCh[motorNumber].channel, duty);
 	return;
@@ -280,14 +280,14 @@ void startCircularRotation( float radius, float arcLength, float linearSpeedAbs)
 		float distance[3] = {0.0f, 0.0f, 0.0f};
 		float speedAbs[3] = {0.0f, 0.0f, 0.0f};
 		float accelerationAbs[3] = {0.0f, 0.0f, 0.0f};
-		
+
 		// Set maximum possible x acceleration
 		accelerationAbs[1] = ODOMETRY_MOVEMENT_ACCELERATION_X;
 		// Set x stable speed
 		speedAbs[1] = linearSpeedAbs;
 		// Set x distance to be passed
 		distance[1] = arcLength;
-		
+
 		// Set maximum possible w acceleration
 		accelerationAbs[2] = accelerationAbs[1] / radius;
 		// Check if angular aceleration exceeds bounds
@@ -299,31 +299,31 @@ void startCircularRotation( float radius, float arcLength, float linearSpeedAbs)
 		speedAbs[2] = linearSpeedAbs / radius;
 		// Set w distance to be passed
 		distance[2] = arcLength / radius;
-		
+
 		startMovementRobotCs1(distance, speedAbs, accelerationAbs);
 	}
 	return;
 }
 
 // Start predefined movement to particular distance in robot's coordinate system
-// Input accelerations are corrected inside functions in order to syncronize acceleration and decceleration 
+// Input accelerations are corrected inside functions in order to syncronize acceleration and decceleration
 void startMovementRobotCs1(float* distance, float* speedAbs, float accelerationAbs[3])
 {
 	// Counter
 	uint8_t i;
-	
+
 	// -1 Normalize speeds
 	checkSaturation(speedAbs);
-	
+
 	// 0 Normalize accelerations
 	syncAccelerations(distance, speedAbs, accelerationAbs);
-	
+
 	// Fill Odometry movement struct with appropriate values
 	for (i = 0x00; i < 0x03; i++)
 	{
 		// 1 Set current coordinate in own system to 0
 		robotCoordCs1[i] = 0.0f;
-		
+
 		// 2 Check if distance is non equal to 0 and speed is more than 0
 		if ((distance[i] != 0.0f) && (speedAbs[i] > 0.0f))
 		{
@@ -335,15 +335,15 @@ void startMovementRobotCs1(float* distance, float* speedAbs, float accelerationA
 			}
 			else
 			{
-				
+
 				OdometryMovement.stableSpeed[i] = -speedAbs[i];
 				OdometryMovement.acceleration[i] = -accelerationAbs[i];
 				OdometryMovement.direction[i] = -1;
 			}
-			
+
 			// 3 Copy distance to be passed
 			OdometryMovement.robotTargetDistanceCs1[i] = distance[i];
-			
+
 			// 4 Optimize direction of robots rotation and angle
 			if (i == 0x02)
 			{
@@ -352,10 +352,10 @@ void startMovementRobotCs1(float* distance, float* speedAbs, float accelerationA
 				{
 					return;
 				}
-				
+
 				// Normalize angle
 				normalizeAngle(&distance[i]);
-				
+
 				if (distance[i] > PI_NUMBER)
 				{
 					OdometryMovement.robotTargetDistanceCs1[i] = distance[i] -  2 * PI_NUMBER;
@@ -371,16 +371,16 @@ void startMovementRobotCs1(float* distance, float* speedAbs, float accelerationA
 					OdometryMovement.direction[i] = 1;
 				}
 			}
-			
-			// 5 Set current speeds 
+
+			// 5 Set current speeds
 			OdometryMovement.initialSpeed[i] = robotSpeedCs1[i];
-			
+
 			// 6 Calculate speed increment after all direction are defined
 			OdometryMovement.speedIncrement[i] = OdometryMovement.acceleration[i] * MOTOR_CONTROL_PERIOD;
-			
+
 			// 7 Calculation of essential parameters of the trajectory
 			calculateTrajectParameters(i, accelerationAbs);
-			
+
 			// 8 Remember start time of movement and set first stage (acceleration)
 			OdometryMovement.startTime[i] = getLocalTime();
 			OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_ACCELERATION;
@@ -396,27 +396,27 @@ void calculateTrajectParameters(uint8_t i, float* accelerationAbs)
 {
 	float deltaCoordAcc = OdometryMovement.direction[i] * (OdometryMovement.stableSpeed[i] * OdometryMovement.stableSpeed[i] - OdometryMovement.initialSpeed[i] * OdometryMovement.initialSpeed[i])
 	/ (0x02 * accelerationAbs[i]);
-	
+
 	float deltaCoordDecc = OdometryMovement.direction[i] * (OdometryMovement.stableSpeed[i] * OdometryMovement.stableSpeed[i] - OdometryMovement.finalSpeed[i] * OdometryMovement.finalSpeed[i])
 	/ (0x02 * accelerationAbs[i]);
-	
+
 	// Point of trajectory to stop acceleration
 	OdometryMovement.stopAccCoordinate[i] = deltaCoordAcc;
-	
+
 	// Point of trajectory to start decceleration
 	OdometryMovement.startDeccCoordinate[i] = OdometryMovement.robotTargetDistanceCs1[i] - deltaCoordDecc;
-	
+
 	// Calculate time duration of movement in tenth of milliseconds
 	OdometryMovement.durationOfMovement[i] = (uint32_t)((fabs(OdometryMovement.stableSpeed[i] - OdometryMovement.initialSpeed[i]) / accelerationAbs[i] +
 	                                         fabs(OdometryMovement.stableSpeed[i] - OdometryMovement.finalSpeed[i]) / accelerationAbs[i] +
 	                                         (fabs((OdometryMovement.startDeccCoordinate[i] - OdometryMovement.stopAccCoordinate[i]) / OdometryMovement.stableSpeed[i]))) * 10000);
-	
-	
+
+
 	// If distance is too short, then correct stable speed
 	if (fabs(OdometryMovement.startDeccCoordinate[i]) < fabs(OdometryMovement.stopAccCoordinate[i]))
 	{
 		// TBD
-		OdometryMovement.stableSpeed[i] = OdometryMovement.direction[i] * sqrt(OdometryMovement.acceleration[i] * OdometryMovement.robotTargetDistanceCs1[i]);
+		OdometryMovement.stableSpeed[i] = OdometryMovement.direction[i] * sqrtf(OdometryMovement.acceleration[i] * OdometryMovement.robotTargetDistanceCs1[i]);
 		OdometryMovement.stopAccCoordinate[i] = OdometryMovement.robotTargetDistanceCs1[i] / 2;
 		OdometryMovement.startDeccCoordinate[i] = OdometryMovement.stopAccCoordinate[i];
 	}
@@ -429,7 +429,7 @@ void syncAccelerations(float* distance, float* speedAbs, float* accelerationAbs)
 	uint8_t i;
 	float accelTimes[3];
 	float maxAccelTime = 0;
-	
+
 	// Normalize accelerations
 	for (i = 0x00; i < 0x03; i++)
 	{
@@ -444,7 +444,7 @@ void syncAccelerations(float* distance, float* speedAbs, float* accelerationAbs)
 			}
 		}
 	}
-	
+
 	// Calculate accelerations for each coordinate in order to obtain equal time of acceleration
 	for (i = 0x00; i < 0x03; i++)
 	{
@@ -463,22 +463,22 @@ void speedRecalculation(void)
 		{
 			case ODOMETRY_MOVEMENT_NO_MOVEMENT:
 				break;
-			
+
 			case ODOMETRY_MOVEMENT_ACCELERATION:
 				robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] + OdometryMovement.acceleration[i] * lastTimeIntervalSec;
 				// Constrain increase in speed if coordinate is still less than stopAccCoord[i]
 				if (fabs(robotTargetSpeedCs1[i]) > fabs(OdometryMovement.stableSpeed[i]))
 				{
 					robotTargetSpeedCs1[i] = OdometryMovement.stableSpeed[i];
-				}					
+				}
 				break;
-				
+
 			case ODOMETRY_MOVEMENT_STABLE_SPEED:
-				
+
 				// Keep constant speed
 				robotTargetSpeedCs1[i] = OdometryMovement.stableSpeed[i];
 				break;
-			
+
 			case ODOMETRY_MOVEMENT_DECCELERATION:
 				// Check if speed is less than speed increment
 				if (fabs(robotSpeedCs1[i]) < fabs(OdometryMovement.speedIncrement[i]))
@@ -507,7 +507,7 @@ void checkIfPositionIsReached(void)
 {
 	uint8_t i;
 	float robotCoordBuf[3];
-	
+
 	// Copy coordinates from robotCoordCs1[i] to robotCoordBuf[i]
 	for (i = 0x00; i < 0x03; i++)
 	{
@@ -518,13 +518,13 @@ void checkIfPositionIsReached(void)
 	{
 		robotCoordBuf[2] = robotCoordBuf[2] - 2 * PI_NUMBER;
 	}
-	
+
 	for (i = 0x00; i < 0x03; i++)
 	{
 		// Check if each particular coordinate is reached and if it is needed to change mode
 		checkIfPositionIsReachedCoord(i, robotCoordBuf);
 	}
-	
+
 	// Change status flag if we finished odometry movement
 	if ((OdometryMovement.odometryMovementStatusFlag[0] == ODOMETRY_MOVEMENT_NO_MOVEMENT) &&
 		(OdometryMovement.odometryMovementStatusFlag[1] == ODOMETRY_MOVEMENT_NO_MOVEMENT) &&
@@ -560,7 +560,7 @@ void checkIfPositionIsReachedCoord(uint8_t i, float* robotCoordBuf)
 				OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_NO_MOVEMENT;
 				return;
 			}
-			
+
 			// Check if mode should be changed
 			if ((fabs(robotCoordBuf[i]) < fabs(OdometryMovement.stopAccCoordinate[i])) && (fabs(robotSpeedCs1[i]) < fabs(OdometryMovement.stableSpeed[i])))
 			{
@@ -620,7 +620,7 @@ static void normalizeAngle(float* angle)
 	}
 	else if (*angle < 0)
 	{
-		*angle = *angle + 2 * PI_NUMBER; 
+		*angle = *angle + 2 * PI_NUMBER;
 	}
 	return;
 }

@@ -40,10 +40,10 @@ OPENOCD=openocd
 
 # Compiler options
 
-MCUFLAGS = -mcpu=cortex-m4 -mlittle-endian -mfloat-abi=hard -mfpu=fpv5-sp-d16\
-	   -mthumb
+MCUFLAGS = -mcpu=cortex-m4 -mlittle-endian -mfloat-abi=hard \
+	   -mfpu=fpv4-sp-d16 -mthumb -fsingle-precision-constant
 
-DEBUG_OPTIMIZE_FLAGS = -O0 -ggdb
+DEBUG_OPTIMIZE_FLAGS = -O2 -ggdb
 
 CFLAGS = -Wall -Wextra --pedantic
 CFLAGS_EXTRA = -nostartfiles -nodefaultlibs -nostdlib\
@@ -51,7 +51,7 @@ CFLAGS_EXTRA = -nostartfiles -nodefaultlibs -nostdlib\
 
 CFLAGS += $(DEFINES) $(MCUFLAGS) $(DEBUG_OPTIMIZE_FLAGS) $(CFLAGS_EXTRA) $(INCLUDES)
 
-LDFLAGS = -static $(MCUFLAGS) -Wl,--start-group -lgcc -lc -lg -Wl,--end-group\
+LDFLAGS = -static $(MCUFLAGS) -Wl,--start-group -lgcc -lc -lg -lm -Wl,--end-group\
 	  -Wl,--gc-sections -T STM32F407VGTx_FLASH.ld
 
 .PHONY: all clean flash erase

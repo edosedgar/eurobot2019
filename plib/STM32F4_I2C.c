@@ -30,22 +30,22 @@ void I2CInit(I2C_Module_With_State_Typedef* I2Cx)
 	I2Cx->module->CR2 &= ~I2C_CR2_FREQ;
 	uint32_t buf = (uint32_t)(GLOBAL_CORE_FREQUENCY / rccGetApb1Prescaler());
 	I2Cx->module->CR2 |= (uint32_t)(GLOBAL_CORE_FREQUENCY / rccGetApb1Prescaler());
-	
+
 	//Event and buffer interrupt enable
-	//I2Cx->CR2 |= I2C_CR2_ITEVTEN|I2C_CR2_ITBUFEN; 
-	
+	//I2Cx->CR2 |= I2C_CR2_ITEVTEN|I2C_CR2_ITBUFEN;
+
 	//Error interrupt enable
-	I2Cx->module->CR2 |= I2C_CR2_ITERREN; 
-	
+	I2Cx->module->CR2 |= I2C_CR2_ITERREN;
+
 	// Standard Mode, ~100 kHz
 	I2Cx->module->CCR |= I2C_CCR_FS;
 	//I2Cx->CCR |= I2C_CCR_DUTY;
-	//I2Cx->CCR |= (uint32_t) ceil(GLOBAL_CORE_FREQUENCY * 1000 / rccGetApb1Prescaler() / 25 / 300);
-	I2Cx->module->CCR |= (uint32_t) ceil(GLOBAL_CORE_FREQUENCY * 1000 / rccGetApb1Prescaler()/ 3 / 300);
-	
+	//I2Cx->CCR |= (uint32_t) ceilf(GLOBAL_CORE_FREQUENCY * 1000 / rccGetApb1Prescaler() / 25 / 300);
+	I2Cx->module->CCR |= (uint32_t) ceilf(GLOBAL_CORE_FREQUENCY * 1000 / rccGetApb1Prescaler()/ 3 / 300);
+
 	//Speed of signal's rising
 	I2Cx->module->TRISE = 15;
-	
+
 	return;
 }
 
@@ -66,62 +66,62 @@ void I2CDisable(I2C_TypeDef* I2Cx)
 
 // Reset I2C bus
 void I2CReset(I2C_Module_With_State_Typedef* I2Cx)
-{	
+{
 	// 1.0 Disable I2C
 	I2CDisable(I2Cx->module);
-	
+
 	// 2.0 Configure the SCL and SDA as general purpose Output open drain (HIGH level)
-	
+
 	// Initialization for SDA and SCL pins as open drain high
 	gpioInitPin(I2C_MODULE_SCL_PIN_PORT, I2C_MODULE_SCL_PIN_NUMBER, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
 	gpioPinSetLevel(I2C_MODULE_SCL_PIN_PORT, I2C_MODULE_SCL_PIN_NUMBER, GPIO_LEVEL_HIGH);
 	gpioInitPin(I2C_MODULE_SDA_PIN_PORT, I2C_MODULE_SDA_PIN_NUMBER, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
 	gpioPinSetLevel(I2C_MODULE_SDA_PIN_PORT, I2C_MODULE_SDA_PIN_NUMBER, GPIO_LEVEL_HIGH);
-	
+
 	// 3.0 Check SCL and SDA High level
 	delayInTenthOfMs(0x03);
-	
+
 	// 4.0 Configure the SDA low level
 	gpioPinSetLevel(I2C_MODULE_SDA_PIN_PORT, I2C_MODULE_SDA_PIN_NUMBER, GPIO_LEVEL_LOW);
-	
+
 	// 5.0 Check SDA Low level
 	delayInTenthOfMs(0x03);
-	
+
 	// 6.0 Configure the SCL low level
 	gpioPinSetLevel(I2C_MODULE_SCL_PIN_PORT, I2C_MODULE_SCL_PIN_NUMBER, GPIO_LEVEL_LOW);
-	
+
 	// 7.0 Check SCL Low level
 	delayInTenthOfMs(0x03);
-	
+
 	// 8.0 Configure the SCL high level
 	gpioPinSetLevel(I2C_MODULE_SCL_PIN_PORT, I2C_MODULE_SCL_PIN_NUMBER, GPIO_LEVEL_HIGH);
-	
+
 	// 9.0 Check SCL high level
 	delayInTenthOfMs(0x03);
-	
+
 	// 10.0 Configure the SDA high level
 	gpioPinSetLevel(I2C_MODULE_SDA_PIN_PORT, I2C_MODULE_SDA_PIN_NUMBER, GPIO_LEVEL_HIGH);
-	
+
 	// 11.0 Check SDA high level
 	delayInTenthOfMs(0x03);
-	
+
 	// 12.0 Configure SCL and SDA alternative function open drain
 	gpioInitPinAf(I2C_MODULE_SCL_PIN_PORT, I2C_MODULE_SCL_PIN_NUMBER, I2C_MODULE_PIN_AF);
 	gpioInitPinAf(I2C_MODULE_SDA_PIN_PORT, I2C_MODULE_SDA_PIN_NUMBER, I2C_MODULE_PIN_AF);
-	
+
 	// 13.0 Set SWRST and then clear it
 	I2Cx->module->CR1|=I2C_CR1_SWRST;
 	I2Cx->module->CR1^=I2C_CR1_SWRST;
-	
+
 	// Enable
 	I2CEnable(I2Cx->module);
-	
+
 	// Init
 	I2CInit(I2Cx);
-	
+
 	// Remeber time of last reset
 	I2Cx->timeOfLastI2CResetMillis = getLocalTime();
-	
+
 	// Return active status
 	I2Cx->status = I2C_ACTIVE_MODE;
 
@@ -169,7 +169,7 @@ static void I2CUnSetAck(I2C_TypeDef* I2Cx)
 static void I2CClearAddrFlag(I2C_TypeDef* I2Cx)
 {
 	(void) I2Cx->SR2;
-	return;	
+	return;
 }
 
 // Set POS flag
@@ -199,10 +199,10 @@ void I2CReadDR(I2C_TypeDef* I2Cx, uint8_t *byte)
 static I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx)
 {
 	uint32_t startTime = getLocalTime();
-	
+
 	// Generate start condition
 	I2Cx->module->CR1 |= I2C_CR1_START;
-	
+
 	// Check START status flag and sending address
 	while (!((I2Cx->module->SR1) & I2C_SR1_SB))
 	{
@@ -222,7 +222,7 @@ static I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx)
 			return I2C_TIMEOUT_ERROR;
 		}
 	}
-	
+
 	//Clear SB flag (+ followed writing in DR)
 	(void) I2Cx->module->SR1;
 	return I2C_ACTIVE_MODE;
@@ -232,10 +232,10 @@ static I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx)
 static I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8_t Addr, I2C_MODE Mode)
 {
 	uint32_t startTime = getLocalTime();
-	
+
 	//Send adress + mode
 	I2Cx->module->DR = I2C_ADDRESS(Addr,Mode);
-	
+
 	//Waiting for sending adress
 	while (!(I2Cx->module->SR1 & I2C_SR1_ADDR))
 	{
@@ -262,7 +262,7 @@ static I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8
 static I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx)
 {
 	uint32_t startTime = getLocalTime();
-	
+
 	//Waiting for RXNE flag to be set
 	while (!(I2Cx->module->SR1 & I2C_SR1_RXNE))
 	{
@@ -282,14 +282,14 @@ static I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx)
 			return I2C_TIMEOUT_ERROR;
 		}
 	}
-	return I2C_ACTIVE_MODE;	
+	return I2C_ACTIVE_MODE;
 }
 
 // Wait for byte transfer finished event
 static I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
 {
 	uint32_t startTime = getLocalTime();
-	
+
 	//Waiting for BTF flag to be set
 	while (!(I2Cx->module->SR1 & I2C_SR1_BTF))
 	{
@@ -316,7 +316,7 @@ static I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
 static I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx)
 {
 	uint32_t startTime = getLocalTime();
-	
+
 	// Check stop flag
 	while (I2Cx->module->CR1 & I2C_CR1_STOP)
 	{
@@ -382,13 +382,13 @@ ErrorStatus I2CSendBytes(I2C_Module_With_State_Typedef* I2Cx, uint8_t* bytesArra
 	{
 		// Send byte
 		I2Cx->module->DR = *bytesPtr;
-		
+
 		//Waiting for byte to be sent
 		if (I2CWaitForBTF(I2Cx) != I2C_ACTIVE_MODE)
 		{
 			return ERROR;
 		}
-		
+
 		//Clear BTF flag
 		(void) I2Cx->module->SR1;
 		bytesPtr++;
@@ -543,7 +543,7 @@ void I2CSearch(I2C_Module_With_State_Typedef* I2Cx)
 		//Waiting for sending adress
 		while ((!(I2Cx->module->SR1 & I2C_SR1_ADDR)) || (!checkTimeout(startTime, 1)))
 		{
-			
+
 		}
 		I2CStop(I2Cx->module);
 		I2CWaitForStopToBeCleared(I2Cx);
@@ -551,11 +551,11 @@ void I2CSearch(I2C_Module_With_State_Typedef* I2Cx)
 		{
 		}
 		address--;
-		
+
 		// Clear AF failure flag
 		I2Cx->module->SR1&=~I2C_SR1_AF;
 		// Clear address flag
 		(void) I2Cx->module->SR2;
 	}
-	
+
 }
