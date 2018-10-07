@@ -26,14 +26,14 @@
 #define ESCON_CALIBR_COEF_B                       0.1f
 
 
-// Minimum and maximum speed of motor/wheel in rad/s 
+// Minimum and maximum speed of motor/wheel in rad/s
 // (it corresponds to maximum duty cycle and minimum duty cycle)
 #define MAX_ROT_SPEED                             27.22713f
 #define MIN_ROT_SPEED                             0.0f
 #define EPS_OF_ROT_SPEED                          0.004f
 
 // Parameters of motors
-// Gear ratios 
+// Gear ratios
 #define MAXON_MOTOR_SHORT_GR                      26.0f
 #define MAXON_MOTOR_LONG_GR                       21.0f
 
@@ -44,7 +44,7 @@
 #define MAXON_MOTOR_LONG_TOTAL_TICKS              MAXON_MOTOR_LONG_GR * MAXON_MOTOR_ENC_TICKS
 #define MAXON_MOTOR_SHORT_TOTAL_TICKS             MAXON_MOTOR_SHORT_GR * MAXON_MOTOR_ENC_TICKS
 
-// Ticks to rad coefficient 
+// Ticks to rad coefficient
 #define TICKS_TO_RAD_COEF_LONG                    2*PI_NUMBER / (MAXON_MOTOR_LONG_TOTAL_TICKS)
 #define TICKS_TO_RAD_COEF_SHORT                   2*PI_NUMBER / (MAXON_MOTOR_SHORT_TOTAL_TICKS)
 
@@ -69,7 +69,7 @@ typedef enum
 	ODOMETRY_MOVEMENT_DECCELERATION,
 }Odometry_Movement_Status_Typedef;
 
-typedef struct 
+typedef struct
 {
 	Odometry_Movement_Status_Typedef  odometryMovementStatusFlag[3];
 	float                             acceleration[3];
@@ -85,7 +85,7 @@ typedef struct
 	uint32_t                          durationOfMovement[3];
 }OdometryMovementStruct;
 
-typedef struct 
+typedef struct
 {
 	uint8_t movingStatusFlag;
 	uint8_t forwardKinCalcStatusFlag;
@@ -143,7 +143,7 @@ void setMotorSpeeds(void);
 void startCircularRotation( float radius, float arcLength, float linearSpeedAbs);
 
 // Start predefined movement to particular distance in robot's coordinate system
-// Input accelerations are corrected inside function in order to syncronize acceleration and decceleration 
+// Input accelerations are corrected inside function in order to syncronize acceleration and decceleration
 void startMovementRobotCs1(float* distance, float* speedAbs, float accelerationAbs[3]);
 
 // Inner function for calculation of points of accelleration and decceleration
@@ -166,11 +166,5 @@ void checkIfPositionIsReachedCoord(uint8_t numberOfManipulator, float* robotCoor
 
 // Check status
 void updateRobotStatus(void);
-
-// Maximum value of array
-static void maxValue(float *a, uint8_t rows,float *b);
-
-// Normalize input angle to range [0, 2*pi)
-static void normalizeAngle(float* angle);
 
 #endif

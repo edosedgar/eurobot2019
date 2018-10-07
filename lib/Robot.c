@@ -32,6 +32,33 @@ uint32_t timeofLastOdometryDataAcquisition;
 // Last time interval (sec)
 float lastTimeIntervalSec;
 
+// Normalize input angle to range [0, 2*pi)
+static void normalizeAngle(float* angle)
+{
+	if (*angle >= 2*PI_NUMBER)
+	{
+		*angle = *angle - 2 * PI_NUMBER;
+	}
+	else if (*angle < 0)
+	{
+		*angle = *angle + 2 * PI_NUMBER;
+	}
+	return;
+}
+
+// Maximum value of array
+static void maxValue(float *a,uint8_t rows,float *b)
+{
+	uint8_t i;
+	*b = fabs(*a);
+	for (i = 0x01; (i <= rows - 0x01); i++)
+	{
+		if ((*b) < fabs(*(a+i)))
+		*b = fabs(*(a + i));
+	}
+	return;
+}
+
 // Time of Robot start
 uint32_t timeOfStart;
 
@@ -595,32 +622,5 @@ void updateRobotStatus(void)
 		}
 	}
 	Robot.movingStatusFlag = 0x00;
-	return;
-}
-
-// Maximum value of array
-static void maxValue(float *a,uint8_t rows,float *b)
-{
-	uint8_t i;
-	*b = fabs(*a);
-	for (i = 0x01; (i <= rows - 0x01); i++)
-	{
-		if ((*b) < fabs(*(a+i)))
-		*b = fabs(*(a + i));
-	}
-	return;
-}
-
-// Normalize input angle to range [0, 2*pi)
-static void normalizeAngle(float* angle)
-{
-	if (*angle >= 2*PI_NUMBER)
-	{
-		*angle = *angle - 2 * PI_NUMBER;
-	}
-	else if (*angle < 0)
-	{
-		*angle = *angle + 2 * PI_NUMBER;
-	}
 	return;
 }
