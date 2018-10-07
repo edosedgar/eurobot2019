@@ -1,7 +1,8 @@
 #######################################################################
 # Makefile for STM32F4-based robot
 
-PROJECT = robot
+OUTPATH = build
+PROJECT = $(OUTPATH)/robot
 OPENOCD_SCRIPT_DIR ?= /usr/share/openocd/scripts
 HEAP_SIZE = 0x400
 
@@ -10,14 +11,14 @@ HEAP_SIZE = 0x400
 
 SOURCES_S = core/startup_stm32f407xx.s
 
-SOURCES_C = $(wildcard board/*.c boot/*.c core/*.c plib/*.c robot/*.c)
+SOURCES_C = $(wildcard lib/*.c main/*.c core/*.c plib/*.c)
 
 SOURCES = $(SOURCES_S) $(SOURCES_C)
 OBJS = $(SOURCES_S:.s=.o) $(SOURCES_C:.c=.o)
 
 # Includes and Defines
 
-INCLUDES += -Iboard -Iboot -Icore -Iplib -Irobot
+INCLUDES += -Ilib -Imain -Icore -Iplib
 
 DEFINES = -DSTM32 -DSTM32F4 -DSTM32F407xx -DHEAP_SIZE=$(HEAP_SIZE)
 
@@ -43,7 +44,7 @@ OPENOCD=openocd
 MCUFLAGS = -mcpu=cortex-m4 -mlittle-endian -mfloat-abi=hard \
 	   -mfpu=fpv4-sp-d16 -mthumb -fsingle-precision-constant
 
-DEBUG_OPTIMIZE_FLAGS = -O2 -ggdb
+DEBUG_OPTIMIZE_FLAGS = -O0 -ggdb
 
 CFLAGS = -Wall -Wextra --pedantic
 CFLAGS_EXTRA = -nostartfiles -nodefaultlibs -nostdlib\
