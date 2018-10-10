@@ -1,24 +1,30 @@
 #######################################################################
-# Makefile for STM32F4-based robot
+# Makefile for STM32F4 Discovery board projects
 
 OUTPATH = build
 PROJECT = $(OUTPATH)/robot
 OPENOCD_SCRIPT_DIR ?= /usr/share/openocd/scripts
-HEAP_SIZE = 0x400
+HEAP_SIZE = 0x500
 
 ################
 # Sources
 
 SOURCES_S = core/startup_stm32f407xx.s
 
-SOURCES_C = $(wildcard lib/*.c main/*.c core/*.c plib/*.c)
+SOURCES_RTOS = $(wildcard freertos/*.c freertos/portable/GCC/ARM_CM4F/*.c)
+SOURCES_RTOS += $(wildcard freertos/portable/MemMang/*.c)
+
+SOURCES_C = $(wildcard *.c core/*.c plib/*.c lib/*.c)
+SOURCES_C += $(SOURCES_RTOS)
 
 SOURCES = $(SOURCES_S) $(SOURCES_C)
 OBJS = $(SOURCES_S:.s=.o) $(SOURCES_C:.c=.o)
 
 # Includes and Defines
 
-INCLUDES += -Ilib -Imain -Icore -Iplib
+INCLUDES_RTOS = -Ifreertos -Ifreertos/include -Ifreertos/portable/GCC/ARM_CM4F
+INCLUDES = -Icore -Iplib -Ilib
+INCLUDES += $(INCLUDES_RTOS)
 
 DEFINES = -DSTM32 -DSTM32F4 -DSTM32F407xx -DHEAP_SIZE=$(HEAP_SIZE)
 
@@ -41,8 +47,8 @@ OPENOCD=openocd
 
 # Compiler options
 
-MCUFLAGS = -mcpu=cortex-m4 -mlittle-endian -mfloat-abi=hard \
-	   -mfpu=fpv4-sp-d16 -mthumb -fsingle-precision-constant
+MCUFLAGS = -mcpu=cortex-m4 -mlittle-endian -mfloat-abi=hard -mfpu=fpv4-sp-d16\
+	   -mthumb -fsingle-precision-constant
 
 DEBUG_OPTIMIZE_FLAGS = -O0 -ggdb
 
@@ -52,12 +58,19 @@ CFLAGS_EXTRA = -nostartfiles -nodefaultlibs -nostdlib\
 
 CFLAGS += $(DEFINES) $(MCUFLAGS) $(DEBUG_OPTIMIZE_FLAGS) $(CFLAGS_EXTRA) $(INCLUDES)
 
-LDFLAGS = -static $(MCUFLAGS) -Wl,--start-group -lgcc -lc -lg -lm -Wl,--end-group\
-	  -Wl,--gc-sections -T STM32F407VGTx_FLASH.ld
+LDFLAGS = -static $(MCUFLAGS) -Wl,--start-group -lgcc -lc -lg -Wl,--end-group \
+	  -Wl,--gc-sections -T STM32F407VGTx_FLASH.ld -specs=nano.specs \
+	  -u _printf_float
+	  #-u _scanf_float
 
-.PHONY: all clean flash erase
+.PHONY: dirs all clean flash erase
 
-all: $(PROJECT).bin $(PROJECT).asm
+all: dirs $(PROJECT).bin $(PROJECT).asm
+
+dirs: ${OUTPATH}
+
+${OUTPATH}:
+	mkdir -p ${OUTPATH}
 
 clean:
 	$(RM) $(OBJS) $(PROJECT).elf $(PROJECT).bin $(PROJECT).asm
@@ -90,6 +103,7 @@ gdb-st-util: $(PROJECT).elf
 $(PROJECT).elf: $(OBJS)
 
 %.elf:
+	echo $(SOURCES_C)
 	$(LD) $(OBJS) $(LDFLAGS) -o $@
 	$(SIZE) -A $@
 
