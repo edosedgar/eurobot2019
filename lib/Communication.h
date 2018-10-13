@@ -6,6 +6,10 @@
 #include "Board.h"
 #include "Commands.h"
 
+#ifndef __packed
+   #define __packed    __attribute__ ((__packed__))
+ #endif
+
 // Buffer settings
 #define COM_REC_BUFFER_LEN     200
 
