@@ -48,9 +48,9 @@ OPENOCD=openocd
 # Compiler options
 
 MCUFLAGS = -mcpu=cortex-m4 -mlittle-endian -mfloat-abi=hard -mfpu=fpv4-sp-d16\
-	   -mthumb -fsingle-precision-constant
+	   -mthumb -fsingle-precision-constant -mno-unaligned-access
 
-DEBUG_OPTIMIZE_FLAGS = -O0 -ggdb
+DEBUG_OPTIMIZE_FLAGS = -O0 -ggdb -gdwarf-2
 
 CFLAGS = -Wall -Wextra --pedantic
 CFLAGS_EXTRA = -nostartfiles -nodefaultlibs -nostdlib\
@@ -85,7 +85,7 @@ erase:
 
 gdb-server-ocd:
 	$(OPENOCD) -f $(OPENOCD_SCRIPT_DIR)/interface/stlink-v2.cfg \
-		   -f $(OPENOCD_SCRIPT_DIR)/target/stm32f4x.cfg
+		   -f $(OPENOCD_SCRIPT_DIR)/board/stm32f4discovery.cfg
 
 gdb-server-st:
 	st-util
@@ -97,7 +97,7 @@ gdb-openocd: $(PROJECT).elf
 
 GDB_P=4242
 gdb-st-util: $(PROJECT).elf
-	$(GDB) --eval-command="target extended-remote localhost:$(GDB_PORT)"\
+	$(GDB) --eval-command="target extended-remote localhost:$(GDB_P)"\
 	       --eval-command="monitor halt" $(PROJECT).elf
 
 $(PROJECT).elf: $(OBJS)
