@@ -32,9 +32,10 @@ void checkCommandAndExecute()
 			// Get motor Number and shift it
 			uint8_t  motorNumber = inputCommand.params[0];
 			motorNumber = motorNumber - 1;
+			float dutycicle =  *( float*)(inputCommand.params + 1);
 			
 			// Set pwm
-			timPwmChangeDutyCycle(motorPwmCh[motorNumber].timModule,motorPwmCh[motorNumber].channel, *(__packed float*)(inputCommand.params +1));
+			timPwmChangeDutyCycle(motorPwmCh[motorNumber].timModule,motorPwmCh[motorNumber].channel, dutycicle);
 			break;
 		}
 		case SET_DIR_BIT:
