@@ -10,7 +10,7 @@
 /*
  * Import commands_handlers table from command_handler.h
  */
-extern void (* const commands_handlers[UPPER_BOUND_COMMANDS])(char *);
+extern int (* const commands_handlers[UPPER_BOUND_COMMANDS])(char *);
 
 /*
  * The main structure for terminal operating
@@ -24,8 +24,8 @@ typedef struct {
         char *com_resp;
 } terminal_task_t;
 
-#define CHANNEL_BUF_SIZE        256
-#define ARGS_BUF_SIZE           128
+#define TERM_CH_BUF_SIZE        256
+#define TERM_ARGS_BUF_SIZE      128
 #define TERM_MAN_STACK_DEPTH    1024
 #define IS_COMMAND_VALID(com) (((com) > LOWER_BOUND_COMMANDS) && \
                                ((com) < UPPER_BOUND_COMMANDS))
@@ -36,17 +36,11 @@ typedef struct {
 StackType_t terminal_manager_ts[TERM_MAN_STACK_DEPTH];
 StaticTask_t terminal_manager_tb;
 
+static TaskHandle_t xTaskToNotify;
+
 /*
  * Main manager for processing incoming commands
  */
 void terminal_manager(void *arg);
-/*
- * Handle received request
- */
-int term_request(terminal_task_t *term_t);
-/*
- * Send response to sender
- */
-void term_response(terminal_task_t *term_t);
 
 #endif

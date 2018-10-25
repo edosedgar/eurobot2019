@@ -4,7 +4,7 @@
 enum {
         LOWER_BOUND_COMMANDS,
         COM_ECHO                         = 0x01,
-
+/*
         COM_SET_PWM                      = 0x03,
         COM_SET_DIR_BIT                  = 0x04,
         COM_CLEAR_DIR_BIT                = 0x05,
@@ -44,7 +44,8 @@ enum {
 
         COM_TURN_COLL_AVOID_ON_OFF       = 0xE0,
         COM_REBOOT_SERVOS                = 0XE1,
-        UPPER_BOUND_COMMANDS,
+*/
+        UPPER_BOUND_COMMANDS
 };
 
 #endif
