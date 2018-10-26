@@ -11,6 +11,11 @@
 #include "task.h"
 #include "command_list.h"
 
+/*
+ * Private task notifier
+ */
+static TaskHandle_t xTaskToNotify;
+
 static void terminal_hw_config(char *ch_buf)
 {
          /* Init terminal pins */
@@ -105,6 +110,8 @@ static void term_response(terminal_task_t *term_t, int resp_len)
 
 void terminal_manager(void *arg)
 {
+        (void) arg;
+
         int command_code = 0;
         int resp_len = 0;
         terminal_task_t term_t;

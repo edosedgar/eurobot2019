@@ -36,8 +36,6 @@ typedef struct {
 StackType_t terminal_manager_ts[TERM_MAN_STACK_DEPTH];
 StaticTask_t terminal_manager_tb;
 
-static TaskHandle_t xTaskToNotify;
-
 /*
  * Main manager for processing incoming commands
  */
