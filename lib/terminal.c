@@ -9,7 +9,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "command_list.h"
+#include "terminal_cmds.h"
 
 /*
  * Private task notifier
@@ -125,7 +125,8 @@ void terminal_manager(void *arg)
 
         while (1) {
                 command_code = term_request(&term_t);
-                if (!IS_COMMAND_VALID(command_code))
+                if (!IS_COMMAND_VALID(command_code) ||
+                    !commands_handlers[command_code])
                         continue;
                 resp_len = commands_handlers[command_code](term_t.com_args);
                 term_response(&term_t, resp_len);

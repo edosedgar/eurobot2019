@@ -5,12 +5,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
-#include "command_list.h"
-
-/*
- * Import commands_handlers table from command_handler.h
- */
-extern int (* const commands_handlers[UPPER_BOUND_COMMANDS])(char *);
+#include "terminal_cmds.h"
 
 /*
  * The main structure for terminal operating
@@ -27,8 +22,8 @@ typedef struct {
 #define TERM_CH_BUF_SIZE        256
 #define TERM_ARGS_BUF_SIZE      128
 #define TERM_MAN_STACK_DEPTH    1024
-#define IS_COMMAND_VALID(com) (((com) > LOWER_BOUND_COMMANDS) && \
-                               ((com) < UPPER_BOUND_COMMANDS))
+#define IS_COMMAND_VALID(com) (((com) > LOWER_BOUND_CMD) && \
+                               ((com) < UPPER_BOUND_CMD))
 
 /*
  * Memory for terminal task
