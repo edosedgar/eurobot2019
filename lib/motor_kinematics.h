@@ -5,6 +5,8 @@
 #include "task.h"
 #include "semphr.h"
 
+#define MOTOR_KIN_STACK_DEPTH    1024
+
 enum motor_kinem_status_flags {
         MK_PWM_CONTROL_BIT,
         MK_SPEED_CONTROL_BIT,
@@ -23,19 +25,31 @@ typedef struct {
         float vel_x;
         float vel_y;
         float wz;
-        SemaphoreHandle_t mk_wakeup;
+        TaskHandle_t mk_notify;
+        SemaphoreHandle_t lock;
         int pwm_motors[4];
 } motors_ctrl_t;
 
 /*
+ * Memory for motor kinematics task
+ */
+StackType_t motor_kinematics_ts[MOTOR_KIN_STACK_DEPTH];
+StaticTask_t motor_kinematics_tb;
+
+/*
  * Semaphore service structure
  */
-StaticSemaphore_t semaphore_buffer;
+StaticSemaphore_t mutex_buffer;
+
+/*
+ * Make motor kinematics structur public
+ */
+extern motors_ctrl_t *mk_ctrl;
 
 /*
  * Main freertos task
  */
-void motor_kinematics_manager(void *arg);
+void motor_kinematics(void *arg);
 /*
  * Set of functions to control motor work mode
  */

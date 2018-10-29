@@ -11,10 +11,13 @@ int (* const commands_handlers[])(char *) = {
 #undef TERM_CMD_DEF
 
 /*
- * Command handlers implementations
+ * General command handlers implementations
  * To add new command and corresponding handler just
  * add new entry to terminal_cmds_defs.h and implementation
  * below.
+ * Note: You are not obliged to implement handlers in this file,
+ *       handlers might be implemented whereever upon condition
+ *       that 'terminal_cmds.h' is included.
  */
 
 /*

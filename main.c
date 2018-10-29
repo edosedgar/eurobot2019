@@ -9,6 +9,7 @@
 #include "task.h"
 #include "io_syscall.h"
 #include "terminal.h"
+#include "motor_kinematics.h"
 
 #include "Board.h"
 #include "Communication.h"
@@ -92,6 +93,9 @@ int main() {
 
         xTaskCreateStatic(terminal_manager, "TERM_MAN", TERM_MAN_STACK_DEPTH,
                           NULL, 2, terminal_manager_ts, &terminal_manager_tb);
+        xTaskCreateStatic(motor_kinematics, "MOTOR_KIN", MOTOR_KIN_STACK_DEPTH,
+                          NULL, 2, motor_kinematics_ts, &motor_kinematics_tb);
+
         vTaskStartScheduler();
         return 0;
 }
