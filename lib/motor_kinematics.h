@@ -5,8 +5,26 @@
 #include "task.h"
 #include "semphr.h"
 
-#define MOTOR_KIN_STACK_DEPTH    1024
+/*
+ * SET_PWM command args structure
+ */
+typedef struct {
+        int channel;
+        float pwm_value;
+} cmd_set_pwm_t;
 
+/*
+ * SET_SPEED command args structure
+ */
+typedef struct {
+        float vx;
+        float vy;
+        float wz;
+} cmd_set_speed_t;
+
+/*
+ * Motor control structure definition
+ */
 enum motor_kinem_status_flags {
         MK_PWM_CONTROL_BIT,
         MK_SPEED_CONTROL_BIT,
@@ -33,6 +51,7 @@ typedef struct {
 /*
  * Memory for motor kinematics task
  */
+#define MOTOR_KIN_STACK_DEPTH    1024
 StackType_t motor_kinematics_ts[MOTOR_KIN_STACK_DEPTH];
 StaticTask_t motor_kinematics_tb;
 

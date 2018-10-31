@@ -18,6 +18,7 @@ motors_ctrl_t *mk_ctrl = NULL;
  */
 int cmd_set_pwm(void *args)
 {
+        cmd_set_pwm_t *cmd_args = (cmd_set_pwm_t *)args;
         /*
          * Check whether kinematics ready or not
          */
@@ -120,7 +121,7 @@ static void mk_hw_config()
         LL_TIM_SetUpdateSource(MOTOR_TIM, LL_TIM_UPDATESOURCE_REGULAR);
 
         /* Enable capture mode */
-        LL_TIM_CC_EnableChannel(MOTOR_TIM, LL_TIM_CHANNEL_CH1 | 
+        LL_TIM_CC_EnableChannel(MOTOR_TIM, LL_TIM_CHANNEL_CH1 |
                                 LL_TIM_CHANNEL_CH2 | LL_TIM_CHANNEL_CH3 |
                                 LL_TIM_CHANNEL_CH4);
 
