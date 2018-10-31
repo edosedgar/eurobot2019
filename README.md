@@ -1,8 +1,7 @@
-roboflash - the eurobot firmware for robot
-==========================================
+roboflesh - robot firmware for eurobot competition
+==================================================
 
-
-Setup Enviroment Section
+Setup enviroment section
 ========================
 
 In order to use this repository, the user shall to install the following
@@ -12,10 +11,10 @@ resources and utilities.
 
 Some of the requirements for installing and using this software are:
 - Update the system
-- Instalation GitHub
-- Instalationl Autoreconf & LibUSB
-- Instalation Cmake
-- Instalation gtk
+- Installation git
+- Installation autoreconf & libusb
+- Installation cmake
+- Installation gtk
 
 ## Install toolchain
 
