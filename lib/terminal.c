@@ -28,9 +28,9 @@ static void terminal_hw_config(char *ch_buf)
         LL_GPIO_SetPinOutputType(TERM_USART_TX_PORT, TERM_USART_TX_PIN,
                                  TERM_USART_OUTPUT_TYPE);
         LL_GPIO_SetPinPull(TERM_USART_TX_PORT, TERM_USART_TX_PIN,
-                           TERM_USART_PULL);
+                           LL_GPIO_PULL_UP);
         LL_GPIO_SetPinSpeed(TERM_USART_TX_PORT, TERM_USART_TX_PIN,
-                            TERM_USART_SPEED);
+                            LL_GPIO_SPEED_FREQ_HIGH);
 
         LL_GPIO_SetAFPin_0_7(TERM_USART_RX_PORT, TERM_USART_RX_PIN,
                              TERM_USART_PIN_AF);
@@ -39,9 +39,9 @@ static void terminal_hw_config(char *ch_buf)
         LL_GPIO_SetPinOutputType(TERM_USART_RX_PORT, TERM_USART_RX_PIN,
                                  TERM_USART_OUTPUT_TYPE);
         LL_GPIO_SetPinPull(TERM_USART_RX_PORT, TERM_USART_RX_PIN,
-                           TERM_USART_PULL);
+                           LL_GPIO_PULL_UP);
         LL_GPIO_SetPinSpeed(TERM_USART_RX_PORT, TERM_USART_RX_PIN,
-                            TERM_USART_SPEED);
+                            LL_GPIO_SPEED_FREQ_HIGH);
 
         /* Enable clocking on USART and DMA */
         LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA2);
