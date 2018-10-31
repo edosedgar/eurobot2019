@@ -6,6 +6,8 @@
 #include "task.h"
 #include "semphr.h"
 
+#include "string.h"
+
 /*
  * Main motor kinematics control structure
  */
@@ -42,8 +44,10 @@ int cmd_set_pwm(void *args)
          * Wake up kinematics task
          */
         xTaskNotifyGive(mk_ctrl->mk_notify);
+        memcpy(args, "OK", 3);
         return 0;
 error_set_pwm:
+        memcpy(args, "ERROR", 6);
         return 0;
 }
 
