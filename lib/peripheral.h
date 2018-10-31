@@ -6,19 +6,23 @@
 #include "stm32f4xx_ll_bus.h"
 #include "stm32f4xx_ll_usart.h"
 #include "stm32f4xx_ll_dma.h"
-#include "FreeRTOSConfig.h"
+#include "stm32f4xx_ll_tim.h"
 
 /*
  * Clock configuration parameters
  */
-#define RCC_SOURCE              LL_RCC_PLLSOURCE_HSE
-#define RCC_PLLM                LL_RCC_PLLM_DIV_8
-#define RCC_PLLN                336
-#define RCC_PLLR                LL_RCC_PLLP_DIV_2
-#define RCC_SYS_SOURCE          LL_RCC_SYS_CLKSOURCE_PLL
-#define RCC_AHB_PRESCALER       LL_RCC_SYSCLK_DIV_1
-#define RCC_APB1_PRESCALER      LL_RCC_APB1_DIV_4
-#define RCC_APB2_PRESCALER      LL_RCC_APB2_DIV_2
+#define RCC_SOURCE                      LL_RCC_PLLSOURCE_HSE
+#define RCC_PLLM                        LL_RCC_PLLM_DIV_8
+#define RCC_PLLN                        336
+#define RCC_PLLR                        LL_RCC_PLLP_DIV_2
+#define RCC_SYS_SOURCE                  LL_RCC_SYS_CLKSOURCE_PLL
+#define RCC_AHB_PRESCALER               LL_RCC_SYSCLK_DIV_1
+#define RCC_APB1_PRESCALER              LL_RCC_APB1_DIV_4
+#define RCC_APB2_PRESCALER              LL_RCC_APB2_DIV_2
+#define RCC_SYSTEM_CLK                  168000000
+#define RCC_AHB_CLK                     RCC_SYSTEM_CLK/1
+#define RCC_APB1_CLK                    RCC_SYSTEM_CLK/4
+#define RCC_APB2_CLK                    RCC_SYSTEM_CLK/2
 
 /*
  * Terminal configuration
@@ -49,5 +53,15 @@
 #define TERM_DMA_BUFFER_SIZE            256
 #define TERM_DMA_MEM_INC_MODE           LL_DMA_MEMORY_INCREMENT
 #define TERM_DMA_SRC_ADDR               (uint32_t)&(TERM_USART)->DR
+
+/*
+ * Motor kinematics timer configuration
+ * APB1_CLK = 42000000, TIM_ARR = 42000, Fpwm = 1KHz
+ */
+#define MOTOR_TIM                       TIM4
+#define MOTOR_TIM_PERIPH_PRESCALER      4
+#define MOTOR_PWM_TIM_ARR               42000
+#define MOTOR_PWM_TIM_CCR_INIT          4200
+#define MOTOR_PWM_TIM_PSC               1
 
 #endif

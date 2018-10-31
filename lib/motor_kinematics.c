@@ -48,7 +48,110 @@ error_set_pwm:
 
 static void mk_hw_config()
 {
-        // Nikita, y should write it
+        /* Init motor_kinematics pins */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOE);
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM4);
+
+        /* Config direction pins */
+        LL_GPIO_SetPinMode(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN,
+                           LL_GPIO_MODE_OUTPUT);
+        LL_GPIO_SetPinOutputType(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN,
+                                 LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN,
+                           LL_GPIO_PULL_NO);
+
+        LL_GPIO_SetPinMode(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN,
+                           LL_GPIO_MODE_OUTPUT);
+        LL_GPIO_SetPinOutputType(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN,
+                                 LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN,
+                           LL_GPIO_PULL_NO);
+
+        LL_GPIO_SetPinMode(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN,
+                           LL_GPIO_MODE_OUTPUT);
+        LL_GPIO_SetPinOutputType(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN,
+                                 LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN,
+                           LL_GPIO_PULL_NO);
+
+        LL_GPIO_SetPinMode(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN,
+                           LL_GPIO_MODE_OUTPUT);
+        LL_GPIO_SetPinOutputType(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN,
+                                 LL_GPIO_OUTPUT_PUSHPULL);
+        LL_GPIO_SetPinPull(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN,
+                           LL_GPIO_PULL_NO);
+
+        /* Config PWM pins */
+        LL_GPIO_SetPinMode(MOTOR_CH_PWM_PORT, MOTOR_CH1_PWM_PIN,
+                           LL_GPIO_MODE_ALTERNATE);
+        LL_GPIO_SetAFPin_8_15(MOTOR_CH_PWM_PORT, MOTOR_CH1_PWM_PIN,
+                              MOTOR_CH_PWM_PIN_AF);
+        LL_GPIO_SetPinOutputType(MOTOR_CH_PWM_PORT, MOTOR_CH1_PWM_PIN,
+                                 LL_GPIO_OUTPUT_PUSHPULL);
+
+        LL_GPIO_SetPinMode(MOTOR_CH_PWM_PORT, MOTOR_CH2_PWM_PIN,
+                           LL_GPIO_MODE_ALTERNATE);
+        LL_GPIO_SetAFPin_8_15(MOTOR_CH_PWM_PORT, MOTOR_CH2_PWM_PIN,
+                              MOTOR_CH_PWM_PIN_AF);
+        LL_GPIO_SetPinOutputType(MOTOR_CH_PWM_PORT, MOTOR_CH2_PWM_PIN,
+                                 LL_GPIO_OUTPUT_PUSHPULL);
+
+        LL_GPIO_SetPinMode(MOTOR_CH_PWM_PORT, MOTOR_CH3_PWM_PIN,
+                           LL_GPIO_MODE_ALTERNATE);
+        LL_GPIO_SetAFPin_8_15(MOTOR_CH_PWM_PORT, MOTOR_CH3_PWM_PIN,
+                              MOTOR_CH_PWM_PIN_AF);
+        LL_GPIO_SetPinOutputType(MOTOR_CH_PWM_PORT, MOTOR_CH3_PWM_PIN,
+                                 LL_GPIO_OUTPUT_PUSHPULL);
+
+        LL_GPIO_SetPinMode(MOTOR_CH_PWM_PORT, MOTOR_CH4_PWM_PIN,
+                           LL_GPIO_MODE_ALTERNATE);
+        LL_GPIO_SetAFPin_8_15(MOTOR_CH_PWM_PORT, MOTOR_CH4_PWM_PIN,
+                              MOTOR_CH_PWM_PIN_AF);
+        LL_GPIO_SetPinOutputType(MOTOR_CH_PWM_PORT, MOTOR_CH4_PWM_PIN,
+                                 LL_GPIO_OUTPUT_PUSHPULL);
+
+        /* Init timer in PWM mode */
+        LL_TIM_EnableUpdateEvent(MOTOR_TIM);
+        LL_TIM_SetClockDivision(MOTOR_TIM, LL_TIM_CLOCKDIVISION_DIV4);
+        LL_TIM_SetCounterMode(MOTOR_TIM, LL_TIM_COUNTERMODE_UP);
+        LL_TIM_SetAutoReload(MOTOR_TIM, MOTOR_PWM_TIM_ARR);
+        LL_TIM_SetUpdateSource(MOTOR_TIM, LL_TIM_UPDATESOURCE_REGULAR);
+
+        /* Enable capture mode */
+        LL_TIM_CC_EnableChannel(MOTOR_TIM, LL_TIM_CHANNEL_CH1 | 
+                                LL_TIM_CHANNEL_CH2 | LL_TIM_CHANNEL_CH3 |
+                                LL_TIM_CHANNEL_CH4);
+
+        /* Set PWM mode */
+        LL_TIM_OC_SetMode(MOTOR_TIM, LL_TIM_CHANNEL_CH1, LL_TIM_OCMODE_PWM1);
+        LL_TIM_OC_SetMode(MOTOR_TIM, LL_TIM_CHANNEL_CH2, LL_TIM_OCMODE_PWM1);
+        LL_TIM_OC_SetMode(MOTOR_TIM, LL_TIM_CHANNEL_CH3, LL_TIM_OCMODE_PWM1);
+        LL_TIM_OC_SetMode(MOTOR_TIM, LL_TIM_CHANNEL_CH4, LL_TIM_OCMODE_PWM1);
+
+        /* Enable fast mode */
+        LL_TIM_OC_EnableFast(MOTOR_TIM, LL_TIM_CHANNEL_CH1);
+        LL_TIM_OC_EnableFast(MOTOR_TIM, LL_TIM_CHANNEL_CH2);
+        LL_TIM_OC_EnableFast(MOTOR_TIM, LL_TIM_CHANNEL_CH3);
+        LL_TIM_OC_EnableFast(MOTOR_TIM, LL_TIM_CHANNEL_CH4);
+
+        /* Enable preload */
+        LL_TIM_OC_EnablePreload(MOTOR_TIM, LL_TIM_CHANNEL_CH1);
+        LL_TIM_OC_EnablePreload(MOTOR_TIM, LL_TIM_CHANNEL_CH2);
+        LL_TIM_OC_EnablePreload(MOTOR_TIM, LL_TIM_CHANNEL_CH3);
+        LL_TIM_OC_EnablePreload(MOTOR_TIM, LL_TIM_CHANNEL_CH4);
+        LL_TIM_EnableARRPreload(MOTOR_TIM);
+
+        /* Set initial value */
+        LL_TIM_OC_SetCompareCH1(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
+        LL_TIM_OC_SetCompareCH2(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
+        LL_TIM_OC_SetCompareCH3(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
+        LL_TIM_OC_SetCompareCH4(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
+
+        /* Enable timer */
+        LL_TIM_GenerateEvent_UPDATE(MOTOR_TIM);
+        LL_TIM_EnableCounter(MOTOR_TIM);
         return;
 }
 
