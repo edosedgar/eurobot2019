@@ -2,30 +2,30 @@ roboflash - the eurobot firmware for robot
 ==========================================
 
 
-# Setup Enviroment Section
+Setup Enviroment Section
+========================
 
-In order to use this repository, the user have to install the following
-resurces and programs.
+In order to use this repository, the user shall to install the following
+resources and utilities.
 
-## Install Toolchain Prerequisities
+## Install toolchain prerequisities
 
-Some of the requirments for iInstalating and using this software are :
+Some of the requirements for installing and using this software are:
 - Update the system
 - Instalation GitHub
-- Instalationl Autoreconf & LibUSB 
+- Instalationl Autoreconf & LibUSB
 - Instalation Cmake
 - Instalation gtk
 
+## Install toolchain
 
-## Install Toolchain
+### Installation compiler and debbuger
 
-### Installation Compiler and Debbuger
+#### ARM developer
 
-#### ARM Developer
-
-The GNU Embedded Toolchain for Arm is a ready-to-use, open source suite of
-tools for C, C++ and Assembly programming targeting Arm Cortex-M and Cortex-R
-family of processors. 
+The GNU Embedded Toolchain for ARM is a ready-to-use, open source suite of
+tools for C, C++ and Assembly programming targeting ARM Cortex-M and Cortex-R
+family of processors.
 
 The PPA we want in this case is from the GCC ARM Embedded Maintainer’s
 team.
@@ -63,19 +63,19 @@ arm-none-eabi-c++filt     arm-none-eabi-gcov-dump   arm-none-eabi-readelf
 arm-none-eabi-cpp         arm-none-eabi-gcov-tool   arm-none-eabi-size
 arm-none-eabi-elfedit     arm-none-eabi-gdb         arm-none-eabi-strings
 arm-none-eabi-g++         arm-none-eabi-gprof       arm-none-eabi-strip
-arm-none-eabi-gcc         arm-none-eabi-ld          
-arm-none-eabi-gcc-7.3.1   arm-none-eabi-ld.bfd 
+arm-none-eabi-gcc         arm-none-eabi-ld
+arm-none-eabi-gcc-7.3.1   arm-none-eabi-ld.bfd
 ```
 
 ###  OpenOCD
 
 OpenOCD is a free on chip debug solution for targets based on ARM. It is a server
-which opens a GDB remote target port and a Telnet port.  
-  
+which opens a GDB remote target port and a Telnet port.
+
 In order to install OpenOCD, the code necesary for instalation could be found
 in [OpenOCD](https://sourceforge.net/projects/openocd/files/openocd/0.10.0/).
 
-The following comands generate and install the program. 
+The following commands generate and install the program.
 
 ```
  ./configure [options]
@@ -83,11 +83,11 @@ The following comands generate and install the program.
  sudo make install
 ```
 
-### Installation St-link
+### Installation st-link
 
-TLink package is the software for the STLink programmer that works with many
-boards ST boards. On the discovery boards, the programmer is embedded at the
-top. YOu just need to make sure you plug in your mini-USB cable into the
+Stlink package is the software for the ST-Link programmer that works with many
+ST boards. On the discovery boards, the programmer is embedded at the
+top. You just need to make sure you plug in your mini-USB cable into the
 center-most port that is labeled ST-Link.
 
 First, clone the repository st-link.
@@ -96,11 +96,10 @@ First, clone the repository st-link.
 git clone https://github.com/texane/stlink.git
 ```
 
-Every thing can built from the top of directory.
+Every thing can be built from the top of directory.
 
 ```
 cd stlink
 make
 cd build/Release && make install DESTDIR=_install
 ```
-
