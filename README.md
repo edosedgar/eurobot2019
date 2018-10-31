@@ -51,7 +51,7 @@ If it installs correctly, doing autocomplete in the terminal like so:
 arm-none (press tab twice)
 ```
 
-You should look something similar like:
+You should see something similar like:
 
 ```
 arm-none-eabi-addr2line   arm-none-eabi-gcc-ar      arm-none-eabi-nm
