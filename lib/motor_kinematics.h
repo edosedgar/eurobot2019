@@ -13,6 +13,10 @@ typedef struct {
         float pwm_value;
 } __attribute__((packed)) cmd_set_pwm_t;
 
+#define SET_PWM_ARGS_ERR(cmd_args) \
+        ((cmd_args)->channel > 3) || (fabsf((cmd_args)->pwm_value) < 0.1f) || \
+                                     (fabsf((cmd_args)->pwm_value) > 1.0f)
+
 /*
  * SET_SPEED command args structure
  */
@@ -45,7 +49,7 @@ typedef struct {
         float wz;
         TaskHandle_t mk_notify;
         SemaphoreHandle_t lock;
-        int pwm_motors[4];
+        float pwm_motors[4];
 } motors_ctrl_t;
 
 /*
