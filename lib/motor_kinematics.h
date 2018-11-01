@@ -9,9 +9,9 @@
  * SET_PWM command args structure
  */
 typedef struct {
-        int channel;
+        uint8_t channel;
         float pwm_value;
-} cmd_set_pwm_t;
+} __attribute__((packed)) cmd_set_pwm_t;
 
 /*
  * SET_SPEED command args structure
@@ -20,7 +20,7 @@ typedef struct {
         float vx;
         float vy;
         float wz;
-} cmd_set_speed_t;
+} __attribute__((packed)) cmd_set_speed_t;
 
 /*
  * Motor control structure definition
