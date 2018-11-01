@@ -7,11 +7,47 @@
 #include "semphr.h"
 
 #include "string.h"
+#include "math.h"
 
 /*
  * Main motor kinematics control structure
  */
 motors_ctrl_t *mk_ctrl = NULL;
+
+/*
+ * Private function for pwm setting
+ */
+static void set_pwm(float *pwm_values)
+{
+        if (pwm_values[0] > 0.0f)
+                LL_GPIO_SetOutputPin(MOTOR_CH1_DIR_PORT,MOTOR_CH1_DIR_PIN);
+        else
+                LL_GPIO_ResetOutputPin(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN);
+        LL_TIM_OC_SetCompareCH1(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[0]) *
+                                MOTOR_PWM_TIM_ARR));
+
+        if (pwm_values[1] > 0.0f)
+                LL_GPIO_SetOutputPin(MOTOR_CH2_DIR_PORT,MOTOR_CH2_DIR_PIN);
+        else
+                LL_GPIO_ResetOutputPin(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN);
+        LL_TIM_OC_SetCompareCH2(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[1]) *
+                                MOTOR_PWM_TIM_ARR));
+
+        if (pwm_values[2] > 0.0f)
+                LL_GPIO_SetOutputPin(MOTOR_CH3_DIR_PORT,MOTOR_CH3_DIR_PIN);
+        else
+                LL_GPIO_ResetOutputPin(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN);
+        LL_TIM_OC_SetCompareCH3(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[2]) *
+                                MOTOR_PWM_TIM_ARR));
+
+        if (pwm_values[3] > 0.0f)
+                LL_GPIO_SetOutputPin(MOTOR_CH4_DIR_PORT,MOTOR_CH4_DIR_PIN);
+        else
+                LL_GPIO_ResetOutputPin(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN);
+        LL_TIM_OC_SetCompareCH4(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[3]) *
+                                MOTOR_PWM_TIM_ARR));
+        return;
+}
 
 /*
  * Set motors pwm command
@@ -30,25 +66,25 @@ int cmd_set_pwm(void *args)
          * Arguments processing
          */
 
+        if (SET_PWM_ARGS_ERR(cmd_args))
+               goto error_set_pwm;
+
         /*
          * Update control structure
          */
         xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
         mk_set_pwm_ctrl(mk_ctrl);
-        mk_ctrl->pwm_motors[0] = 0.1f;
-        mk_ctrl->pwm_motors[1] = 0.1f;
-        mk_ctrl->pwm_motors[2] = 0.1f;
-        mk_ctrl->pwm_motors[3] = 0.1f;
+        mk_ctrl->pwm_motors[cmd_args->channel - 1] = cmd_args->pwm_value;
         xSemaphoreGive(mk_ctrl->lock);
         /*
          * Wake up kinematics task
          */
         xTaskNotifyGive(mk_ctrl->mk_notify);
         memcpy(args, "OK", 3);
-        return 0;
+        return 3;
 error_set_pwm:
         memcpy(args, "ERROR", 6);
-        return 0;
+        return 6;
 }
 
 static void mk_hw_config()
@@ -177,7 +213,13 @@ void mk_set_speed_ctrl(motors_ctrl_t *mk_ctrl)
 void motor_kinematics(void *arg) {
         (void) arg;
 
-        motors_ctrl_t mk_ctrl_st = {0};
+        motors_ctrl_t mk_ctrl_st = {
+                .status = 0x00,
+                .vel_x = 0.0f,
+                .vel_y = 0.0f,
+                .wz = 0.0f,
+                .pwm_motors = {0.1f, 0.1f, 0.1f, 0.1f}
+        };
 
         mk_hw_config();
         mk_ctrl_st.lock = xSemaphoreCreateMutexStatic(&mutex_buffer);
@@ -198,6 +240,7 @@ void motor_kinematics(void *arg) {
                         //It is time to convert speed to PWM values in ctrl m
                 }
                 //Set hw PWM channels
+                set_pwm(mk_ctrl->pwm_motors);
                 xSemaphoreGive(mk_ctrl->lock);
         }
         return;
