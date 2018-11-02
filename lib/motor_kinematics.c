@@ -20,7 +20,82 @@ static motors_ctrl_t *mk_ctrl = NULL;
  */
 static void mk_speed2pwm(motors_ctrl_t *mk_ctrl)
 {
+        /*
+         * Matrices for calculation of wheel speed
+         * 1st - linear components
+         * 2nd - rotational components
+         */
+        static arm_matrix_instance_f32 m_fk_lin;
+        static float fk_linear[12] = {MK_LIN_KIN_MATRIX};
+        static arm_matrix_instance_f32 m_fk_rot;
+        static float fk_rotational[12] = {MK_ROT_KIN_MATRIX};
+        /*
+         * For calculated rotational speeds (in rad/s)
+         * Note: both terms
+         */
+        static arm_matrix_instance_f32 m_lin_sp;
+        static float lin_sp[4] = {0.0f};
+        static arm_matrix_instance_f32 m_rot_sp;
+        static float rot_sp[4] = {0.0f};
+        /*
+         * Final speed (casted and normalized)
+         */
+        static arm_matrix_instance_f32 m_speed;
+        static float speed[4] = {0.0f};
+        /*
+         * Input linear speed in robot's coordinate system
+         */
+        static arm_matrix_instance_f32 m_input_sp;
+        static float input_speed[3] = {0.0f};
+        input_speed[0] = mk_ctrl->vel_x;
+        input_speed[1] = mk_ctrl->vel_y;
+        input_speed[2] = mk_ctrl->wz;
+        /*
+         * max and min value in resulting matrix
+         */
+        static float max_sp, min_sp;
+        /*
+         * Calibration parameters to convert angular speed to pwm
+         * values
+         */
+        static float pwm_cal_a[4] = {MK_SPEED2PWM_A};
+        static float pwm_cal_b[4] = {MK_SPEED2PWM_B};
 
+        /*
+         * Init arm_math matrice data structures
+         */
+        arm_mat_init_f32(&m_fk_lin, 4, 3, fk_linear);
+        arm_mat_init_f32(&m_fk_rot, 4, 3, fk_rotational);
+        arm_mat_init_f32(&m_lin_sp, 4, 1, lin_sp);
+        arm_mat_init_f32(&m_rot_sp, 4, 1, rot_sp);
+        arm_mat_init_f32(&m_speed,  4, 1, speed);
+        arm_mat_init_f32(&m_input_sp, 3, 1, input_speed);
+        /*
+         * Calculate linear components
+         */
+        arm_mat_mult_f32(&m_fk_lin, &m_input_sp, &m_lin_sp);
+        /*
+         * Calculate rotational part
+         */
+        arm_mat_mult_f32(&m_fk_rot, &m_input_sp, &m_rot_sp);
+        /*
+         * Sum both components
+         */
+        arm_mat_add_f32(&m_lin_sp, &m_rot_sp, &m_speed);
+        /*
+         * Find max and min values and fit speeds to the absolute max one
+         */
+        arm_max_f32(speed, 4, &max_sp, NULL);
+        arm_min_f32(speed, 4, &min_sp, NULL);
+        if (max_sp < fabsf(min_sp))
+                max_sp = -min_sp;
+        if (max_sp > MK_MAX_ROT_SPEED)
+                arm_mat_scale_f32(&m_speed, MK_MAX_ROT_SPEED/max_sp, &m_speed);
+        /*
+         * Convert rot/s to pwm normalized values
+         */
+        arm_mult_f32(speed, pwm_cal_a, speed, 4);
+        arm_add_f32(speed, pwm_cal_b, mk_ctrl->pwm_motors, 4);
         return;
 }
 
@@ -252,18 +327,15 @@ void motor_kinematics(void *arg)
 int cmd_set_pwm(void *args)
 {
         cmd_set_pwm_t *cmd_args = (cmd_set_pwm_t *)args;
+
         /*
          * Check whether kinematics ready or not
+         * and check parameters
          */
         if (!mk_ctrl)
                 goto error_set_pwm;
-        /*
-         * Arguments processing
-         */
-
         if (SET_PWM_ARGS_ERR(cmd_args))
                goto error_set_pwm;
-
         /*
          * Update control structure
          */
@@ -278,6 +350,37 @@ int cmd_set_pwm(void *args)
         memcpy(args, "OK", 3);
         return 3;
 error_set_pwm:
+        memcpy(args, "ERROR", 6);
+        return 6;
+}
+
+/*
+ * Set motors speed command
+ * Input: linear and rotational speed
+ * Output: OK or ERROR status
+ */
+int cmd_set_speed(void *args)
+{
+        cmd_set_speed_t *cmd_args = (cmd_set_speed_t *)args;
+        /*
+         * Check whether kinematics ready or not
+         */
+        if (!mk_ctrl)
+                goto error_set_speed;
+        /*
+         * Update control structure
+         */
+        xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
+        mk_set_speed_ctrl(mk_ctrl);
+        memcpy(&(mk_ctrl->vel_x), &(cmd_args->vx), 12);
+        xSemaphoreGive(mk_ctrl->lock);
+        /*
+         * Wake up kinematics task
+         */
+        xTaskNotifyGive(mk_ctrl->mk_notify);
+        memcpy(args, "OK", 3);
+        return 3;
+error_set_speed:
         memcpy(args, "ERROR", 6);
         return 6;
 }

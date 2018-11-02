@@ -65,6 +65,34 @@ StaticTask_t motor_kinematics_tb;
 StaticSemaphore_t mutex_buffer;
 
 /*
+ * Forward kinematics parameters
+ */
+#define MK_MAX_ROT_SPEED 27.22713f
+#define MK_LIN_KIN_MATRIX \
+        24.4161859f,    27.2213531f,    0.0f, \
+        31.09554175f,  -15.04963672f,   0.0f, \
+        31.07573411f,   16.22788419f,   0.0f, \
+        24.4161859f,   -25.11085301f,   0.0f
+
+#define MK_ROT_KIN_MATRIX \
+        0.0f,   0.0f,   -5.77869177f, \
+        0.0f,   0.0f,    4.47936896f, \
+        0.0f,   0.0f,    4.47936896f, \
+        0.0f,   0.0f,   -5.77869177f
+
+#define MK_SPEED2PWM_A \
+        0.0293824f, \
+        0.0293824f, \
+        0.0293824f, \
+        0.0293824f
+
+#define MK_SPEED2PWM_B \
+        0.1f, \
+        0.1f, \
+        0.1f, \
+        0.1f
+
+/*
  * Main freertos task
  */
 void motor_kinematics(void *arg);
