@@ -2,12 +2,12 @@
 * Copyright (C) 2010-2014 ARM Limited. All rights reserved.
 *
 * $Date:        19. March 2015
-* $Revision: 	V.1.4.5
+* $Revision:    V.1.4.5
 *
-* Project: 	    CMSIS DSP Library
+* Project:          CMSIS DSP Library
 * Title:        arm_mat_add_f32.c
 *
-* Description:	Floating-point matrix addition
+* Description:  Floating-point matrix addition
 *
 * Target Processor: Cortex-M4/Cortex-M3/Cortex-M0
 *
@@ -67,7 +67,7 @@
  * @param[in]       *pSrcA points to the first input matrix structure
  * @param[in]       *pSrcB points to the second input matrix structure
  * @param[out]      *pDst points to output matrix structure
- * @return     		The function returns either
+ * @return              The function returns either
  * <code>ARM_MATH_SIZE_MISMATCH</code> or <code>ARM_MATH_SUCCESS</code> based on the outcome of size checking.
  */
 
