@@ -65,19 +65,8 @@ StaticTask_t motor_kinematics_tb;
 StaticSemaphore_t mutex_buffer;
 
 /*
- * Make motor kinematics structur public
- */
-extern motors_ctrl_t *mk_ctrl;
-
-/*
  * Main freertos task
  */
 void motor_kinematics(void *arg);
-/*
- * Set of functions to control motor work mode
- */
-void mk_set_pwm_ctrl(motors_ctrl_t *mk_ctrl);
-
-void mk_set_speed_ctrl(motors_ctrl_t *mk_ctrl);
 
 #endif

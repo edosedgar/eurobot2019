@@ -8,16 +8,23 @@
 
 #include "string.h"
 #include "math.h"
+#include "arm_math.h"
 
 /*
  * Main motor kinematics control structure
  */
-motors_ctrl_t *mk_ctrl = NULL;
+static motors_ctrl_t *mk_ctrl = NULL;
 
 /*
- * Private function for pwm setting
+ * Set of private helper functions
  */
-static void set_pwm(float *pwm_values)
+static void mk_speed2pwm(motors_ctrl_t *mk_ctrl)
+{
+
+        return;
+}
+
+static void mk_set_pwm(float *pwm_values)
 {
         if (pwm_values[0] > 0.0f)
                 LL_GPIO_SetOutputPin(MOTOR_CH1_DIR_PORT,MOTOR_CH1_DIR_PIN);
@@ -47,44 +54,6 @@ static void set_pwm(float *pwm_values)
         LL_TIM_OC_SetCompareCH4(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[3]) *
                                 MOTOR_PWM_TIM_ARR));
         return;
-}
-
-/*
- * Set motors pwm command
- * Input: values for each pwm channel
- * Output:
- */
-int cmd_set_pwm(void *args)
-{
-        cmd_set_pwm_t *cmd_args = (cmd_set_pwm_t *)args;
-        /*
-         * Check whether kinematics ready or not
-         */
-        if (!mk_ctrl)
-                goto error_set_pwm;
-        /*
-         * Arguments processing
-         */
-
-        if (SET_PWM_ARGS_ERR(cmd_args))
-               goto error_set_pwm;
-
-        /*
-         * Update control structure
-         */
-        xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
-        mk_set_pwm_ctrl(mk_ctrl);
-        mk_ctrl->pwm_motors[cmd_args->channel - 1] = cmd_args->pwm_value;
-        xSemaphoreGive(mk_ctrl->lock);
-        /*
-         * Wake up kinematics task
-         */
-        xTaskNotifyGive(mk_ctrl->mk_notify);
-        memcpy(args, "OK", 3);
-        return 3;
-error_set_pwm:
-        memcpy(args, "ERROR", 6);
-        return 6;
 }
 
 static void mk_hw_config()
@@ -196,23 +165,37 @@ static void mk_hw_config()
         return;
 }
 
-void mk_set_pwm_ctrl(motors_ctrl_t *mk_ctrl)
+static void mk_set_pwm_ctrl(motors_ctrl_t *mk_ctrl)
 {
         mk_ctrl->status |= MK_PWM_CONTROL_BIT;
         mk_ctrl->status &= ~MK_SPEED_CONTROL_BIT;
         return;
 }
 
-void mk_set_speed_ctrl(motors_ctrl_t *mk_ctrl)
+static void mk_set_speed_ctrl(motors_ctrl_t *mk_ctrl)
 {
         mk_ctrl->status |= MK_SPEED_CONTROL_BIT;
         mk_ctrl->status &= ~MK_PWM_CONTROL_BIT;
         return;
 }
+/*
+ * End of section with helper functions
+ */
 
-void motor_kinematics(void *arg) {
+/*
+ * Main motor kinematics task running by FreeRTOS
+ */
+void motor_kinematics(void *arg)
+{
         (void) arg;
 
+        /*
+         * Proper initialization of main motor
+         * control structure
+         * All pwm values are set to be 10% of max to avoid reset
+         * of Maxon motors (his majesty does not like to reseted
+         * as he is pricey)
+         */
         motors_ctrl_t mk_ctrl_st = {
                 .status = 0x00,
                 .vel_x = 0.0f,
@@ -229,19 +212,72 @@ void motor_kinematics(void *arg) {
         while (1) {
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
+                /*
+                 * If one stopped motors immediately reset all pwm values
+                 */
                 if (mk_ctrl->status & MK_STOP_MOTORS_BIT) {
                         mk_ctrl->pwm_motors[0] = 0.1f;
                         mk_ctrl->pwm_motors[1] = 0.1f;
                         mk_ctrl->pwm_motors[2] = 0.1f;
                         mk_ctrl->pwm_motors[3] = 0.1f;
                 }
+                /*
+                 * If motors are allowed to be running and control
+                 * was switched to speed mode call mk_speed2pwm to calculate
+                 * matrix kinematics
+                 */
                 if (mk_ctrl->status & MK_SPEED_CONTROL_BIT &&
                     !(mk_ctrl->status & MK_STOP_MOTORS_BIT)) {
-                        //It is time to convert speed to PWM values in ctrl m
+                        mk_speed2pwm(mk_ctrl);
                 }
-                //Set hw PWM channels
-                set_pwm(mk_ctrl->pwm_motors);
+                /*
+                 * In the end all pwm values shall be updated and lock
+                 * released.
+                 */
+                mk_set_pwm(mk_ctrl->pwm_motors);
                 xSemaphoreGive(mk_ctrl->lock);
         }
         return;
+}
+
+/*
+ * Set of motor related handlers for terminal
+ */
+
+/*
+ * Set motors pwm command
+ * Input: values for each pwm channel
+ * Output: OK or ERROR status
+ */
+int cmd_set_pwm(void *args)
+{
+        cmd_set_pwm_t *cmd_args = (cmd_set_pwm_t *)args;
+        /*
+         * Check whether kinematics ready or not
+         */
+        if (!mk_ctrl)
+                goto error_set_pwm;
+        /*
+         * Arguments processing
+         */
+
+        if (SET_PWM_ARGS_ERR(cmd_args))
+               goto error_set_pwm;
+
+        /*
+         * Update control structure
+         */
+        xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
+        mk_set_pwm_ctrl(mk_ctrl);
+        mk_ctrl->pwm_motors[cmd_args->channel - 1] = cmd_args->pwm_value;
+        xSemaphoreGive(mk_ctrl->lock);
+        /*
+         * Wake up kinematics task
+         */
+        xTaskNotifyGive(mk_ctrl->mk_notify);
+        memcpy(args, "OK", 3);
+        return 3;
+error_set_pwm:
+        memcpy(args, "ERROR", 6);
+        return 6;
 }
