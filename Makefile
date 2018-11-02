@@ -2,7 +2,7 @@
 # Makefile for STM32F4 Discovery board projects
 
 OUTPATH = build
-PROJECT = $(OUTPATH)/robot
+PROJECT = $(OUTPATH)/robotflesh
 OPENOCD_SCRIPT_DIR ?= /usr/share/openocd/scripts
 HEAP_SIZE = 0x500
 
@@ -13,20 +13,33 @@ SOURCES_S = core/startup_stm32f407xx.s
 
 SOURCES_RTOS = $(wildcard freertos/*.c freertos/portable/GCC/ARM_CM4F/*.c)
 SOURCES_RTOS += $(wildcard freertos/portable/MemMang/*.c)
+SOURCES_CORE = $(wildcard core/*.c)
+SOURCES_PERIPH = $(wildcard plib/*.c)
+SOURCES_ARM_MATH = $(wildcard math/*.c)
 
-SOURCES_C = $(wildcard *.c core/*.c plib/*.c lib/*.c old/*.c)
+SOURCES_C = $(wildcard *.c old/*.c lib/*.c)
 SOURCES_C += $(SOURCES_RTOS)
+SOURCES_C += $(SOURCES_CORE)
+SOURCES_C += $(SOURCES_PERIPH)
+SOURCES_C += $(SOURCES_ARM_MATH)
 
 SOURCES = $(SOURCES_S) $(SOURCES_C)
 OBJS = $(SOURCES_S:.s=.o) $(SOURCES_C:.c=.o)
 
 # Includes and Defines
 
-INCLUDES_RTOS = -Ifreertos -Ifreertos/include -Ifreertos/portable/GCC/ARM_CM4F
-INCLUDES = -Icore -Iplib -Ilib -Iold
-INCLUDES += $(INCLUDES_RTOS)
+INC_RTOS = -Ifreertos -Ifreertos/include -Ifreertos/portable/GCC/ARM_CM4F
+INC_CORE = -Icore
+INC_PERIPH = -Iplib
+INC_ARM_MATH = -Imath
+INCLUDES = -Iold -Ilib
+INCLUDES += $(INC_RTOS)
+INCLUDES += $(INC_CORE)
+INCLUDES += $(INC_PERIPH)
+INCLUDES += $(INC_ARM_MATH)
 
 DEFINES = -DSTM32 -DSTM32F4 -DSTM32F407xx -DHEAP_SIZE=$(HEAP_SIZE)
+DEFINES += -DARM_MATH_CM4
 
 # Compiler/Assembler/Linker/etc
 
@@ -47,7 +60,7 @@ OPENOCD=openocd
 
 # Compiler options
 
-MCUFLAGS = -mcpu=cortex-m4 -mlittle-endian -mfloat-abi=hard -mfpu=fpv4-sp-d16\
+MCUFLAGS = -mcpu=cortex-m4 -mlittle-endian -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
 	   -mthumb -fsingle-precision-constant -mno-unaligned-access
 
 DEBUG_OPTIMIZE_FLAGS = -O0 -ggdb -gdwarf-2
