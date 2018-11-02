@@ -4,7 +4,7 @@ roboflesh - robot firmware for eurobot competition
 Setup enviroment section
 ========================
 
-In order to use this repository, the user shall to install the following
+In order to use this repository, the user shall install the following
 resources and utilities.
 
 ## Install toolchain prerequisities
