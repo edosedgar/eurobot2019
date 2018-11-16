@@ -26,22 +26,22 @@ static void mk_speed2pwm(motors_ctrl_t *mk_ctrl)
          * 2nd - rotational components
          */
         static arm_matrix_instance_f32 m_fk_lin;
-        static float fk_linear[12] = {MK_LIN_KIN_MATRIX};
+        static float fk_linear[9] = {MK_LIN_KIN_MATRIX};
         static arm_matrix_instance_f32 m_fk_rot;
-        static float fk_rotational[12] = {MK_ROT_KIN_MATRIX};
+        static float fk_rotational[9] = {MK_ROT_KIN_MATRIX};
         /*
          * For calculated rotational speeds (in rad/s)
          * Note: both terms
          */
         static arm_matrix_instance_f32 m_lin_sp;
-        static float lin_sp[4] = {0.0f};
+        static float lin_sp[3] = {0.0f};
         static arm_matrix_instance_f32 m_rot_sp;
-        static float rot_sp[4] = {0.0f};
+        static float rot_sp[3] = {0.0f};
         /*
          * Final speed (casted and normalized)
          */
         static arm_matrix_instance_f32 m_speed;
-        static float speed[4] = {0.0f};
+        static float speed[3] = {0.0f};
         /*
          * Input linear speed in robot's coordinate system
          */
@@ -58,17 +58,21 @@ static void mk_speed2pwm(motors_ctrl_t *mk_ctrl)
          * Calibration parameters to convert angular speed to pwm
          * values
          */
-        static float pwm_cal_a[4] = {MK_SPEED2PWM_A};
-        static float pwm_cal_b[4] = {MK_SPEED2PWM_B};
+        static float pwm_cal_a[3] = {MK_SPEED2PWM_A};
+        float pwm_cal_b[3] = {MK_SPEED2PWM_B};
+        /*
+         * Index for calculating PWM for each motor
+         */
+        int motor_index = 0;
 
         /*
          * Init arm_math matrice data structures
          */
-        arm_mat_init_f32(&m_fk_lin, 4, 3, fk_linear);
-        arm_mat_init_f32(&m_fk_rot, 4, 3, fk_rotational);
-        arm_mat_init_f32(&m_lin_sp, 4, 1, lin_sp);
-        arm_mat_init_f32(&m_rot_sp, 4, 1, rot_sp);
-        arm_mat_init_f32(&m_speed,  4, 1, speed);
+        arm_mat_init_f32(&m_fk_lin, 3, 3, fk_linear);
+        arm_mat_init_f32(&m_fk_rot, 3, 3, fk_rotational);
+        arm_mat_init_f32(&m_lin_sp, 3, 1, lin_sp);
+        arm_mat_init_f32(&m_rot_sp, 3, 1, rot_sp);
+        arm_mat_init_f32(&m_speed, 3, 1, speed);
         arm_mat_init_f32(&m_input_sp, 3, 1, input_speed);
         /*
          * Calculate linear components
@@ -85,8 +89,8 @@ static void mk_speed2pwm(motors_ctrl_t *mk_ctrl)
         /*
          * Find max and min values and fit speeds to the absolute max one
          */
-        arm_max_f32(speed, 4, &max_sp, NULL);
-        arm_min_f32(speed, 4, &min_sp, NULL);
+        arm_max_f32(speed, 3, &max_sp, NULL);
+        arm_min_f32(speed, 3, &min_sp, NULL);
         if (max_sp < fabsf(min_sp))
                 max_sp = -min_sp;
         if (max_sp > MK_MAX_ROT_SPEED)
@@ -94,8 +98,12 @@ static void mk_speed2pwm(motors_ctrl_t *mk_ctrl)
         /*
          * Convert rot/s to pwm normalized values
          */
-        arm_mult_f32(speed, pwm_cal_a, speed, 4);
-        arm_add_f32(speed, pwm_cal_b, mk_ctrl->pwm_motors, 4);
+        arm_mult_f32(speed, pwm_cal_a, speed, 3);
+        for (motor_index = 0 ; motor_index < 3 ; motor_index++) {
+            if(speed[motor_index] < 0)
+                pwm_cal_b[motor_index] *= -1;
+        }
+        arm_add_f32(speed, pwm_cal_b, mk_ctrl->pwm_motors, 3);
         return;
 }
 
@@ -122,12 +130,6 @@ static void mk_set_pwm(float *pwm_values)
         LL_TIM_OC_SetCompareCH3(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[2]) *
                                 MOTOR_PWM_TIM_ARR));
 
-        if (pwm_values[3] > 0.0f)
-                LL_GPIO_SetOutputPin(MOTOR_CH4_DIR_PORT,MOTOR_CH4_DIR_PIN);
-        else
-                LL_GPIO_ResetOutputPin(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN);
-        LL_TIM_OC_SetCompareCH4(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[3]) *
-                                MOTOR_PWM_TIM_ARR));
         return;
 }
 
@@ -161,13 +163,6 @@ static void mk_hw_config()
         LL_GPIO_SetPinPull(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN,
                            LL_GPIO_PULL_NO);
 
-        LL_GPIO_SetPinMode(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN,
-                           LL_GPIO_MODE_OUTPUT);
-        LL_GPIO_SetPinOutputType(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN,
-                                 LL_GPIO_OUTPUT_PUSHPULL);
-        LL_GPIO_SetPinPull(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN,
-                           LL_GPIO_PULL_NO);
-
         /* Config PWM pins */
         LL_GPIO_SetPinMode(MOTOR_CH_PWM_PORT, MOTOR_CH1_PWM_PIN,
                            LL_GPIO_MODE_ALTERNATE);
@@ -190,13 +185,6 @@ static void mk_hw_config()
         LL_GPIO_SetPinOutputType(MOTOR_CH_PWM_PORT, MOTOR_CH3_PWM_PIN,
                                  LL_GPIO_OUTPUT_PUSHPULL);
 
-        LL_GPIO_SetPinMode(MOTOR_CH_PWM_PORT, MOTOR_CH4_PWM_PIN,
-                           LL_GPIO_MODE_ALTERNATE);
-        LL_GPIO_SetAFPin_8_15(MOTOR_CH_PWM_PORT, MOTOR_CH4_PWM_PIN,
-                              MOTOR_CH_PWM_PIN_AF);
-        LL_GPIO_SetPinOutputType(MOTOR_CH_PWM_PORT, MOTOR_CH4_PWM_PIN,
-                                 LL_GPIO_OUTPUT_PUSHPULL);
-
         /* Init timer in PWM mode */
         LL_TIM_EnableUpdateEvent(MOTOR_TIM);
         LL_TIM_SetClockDivision(MOTOR_TIM, LL_TIM_CLOCKDIVISION_DIV4);
@@ -206,33 +194,28 @@ static void mk_hw_config()
 
         /* Enable capture mode */
         LL_TIM_CC_EnableChannel(MOTOR_TIM, LL_TIM_CHANNEL_CH1 |
-                                LL_TIM_CHANNEL_CH2 | LL_TIM_CHANNEL_CH3 |
-                                LL_TIM_CHANNEL_CH4);
+                                LL_TIM_CHANNEL_CH2 | LL_TIM_CHANNEL_CH3);
 
         /* Set PWM mode */
         LL_TIM_OC_SetMode(MOTOR_TIM, LL_TIM_CHANNEL_CH1, LL_TIM_OCMODE_PWM1);
         LL_TIM_OC_SetMode(MOTOR_TIM, LL_TIM_CHANNEL_CH2, LL_TIM_OCMODE_PWM1);
         LL_TIM_OC_SetMode(MOTOR_TIM, LL_TIM_CHANNEL_CH3, LL_TIM_OCMODE_PWM1);
-        LL_TIM_OC_SetMode(MOTOR_TIM, LL_TIM_CHANNEL_CH4, LL_TIM_OCMODE_PWM1);
 
         /* Enable fast mode */
         LL_TIM_OC_EnableFast(MOTOR_TIM, LL_TIM_CHANNEL_CH1);
         LL_TIM_OC_EnableFast(MOTOR_TIM, LL_TIM_CHANNEL_CH2);
         LL_TIM_OC_EnableFast(MOTOR_TIM, LL_TIM_CHANNEL_CH3);
-        LL_TIM_OC_EnableFast(MOTOR_TIM, LL_TIM_CHANNEL_CH4);
 
         /* Enable preload */
         LL_TIM_OC_EnablePreload(MOTOR_TIM, LL_TIM_CHANNEL_CH1);
         LL_TIM_OC_EnablePreload(MOTOR_TIM, LL_TIM_CHANNEL_CH2);
         LL_TIM_OC_EnablePreload(MOTOR_TIM, LL_TIM_CHANNEL_CH3);
-        LL_TIM_OC_EnablePreload(MOTOR_TIM, LL_TIM_CHANNEL_CH4);
         LL_TIM_EnableARRPreload(MOTOR_TIM);
 
         /* Set initial value */
         LL_TIM_OC_SetCompareCH1(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
         LL_TIM_OC_SetCompareCH2(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
         LL_TIM_OC_SetCompareCH3(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
-        LL_TIM_OC_SetCompareCH4(MOTOR_TIM, MOTOR_PWM_TIM_CCR_INIT);
 
         /* Enable timer */
         LL_TIM_GenerateEvent_UPDATE(MOTOR_TIM);
@@ -276,7 +259,7 @@ void motor_kinematics(void *arg)
                 .vel_x = 0.0f,
                 .vel_y = 0.0f,
                 .wz = 0.0f,
-                .pwm_motors = {0.1f, 0.1f, 0.1f, 0.1f}
+                .pwm_motors = {0.1f, 0.1f, 0.1f}
         };
 
         mk_hw_config();
@@ -294,7 +277,6 @@ void motor_kinematics(void *arg)
                         mk_ctrl->pwm_motors[0] = 0.1f;
                         mk_ctrl->pwm_motors[1] = 0.1f;
                         mk_ctrl->pwm_motors[2] = 0.1f;
-                        mk_ctrl->pwm_motors[3] = 0.1f;
                 }
                 /*
                  * If motors are allowed to be running and control
