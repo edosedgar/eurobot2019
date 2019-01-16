@@ -16,7 +16,7 @@
 #define TERM_USART_OUTPUT_TYPE              LL_GPIO_OUTPUT_PUSHPULL
 
 /*
- * Stm driver UART pinout
+ * STMF0 driver UART pinout
  */
 #define STM_DRIVER_USART_TX_PORT            GPIOC
 #define STM_DRIVER_USART_TX_PIN             LL_GPIO_PIN_10
@@ -42,7 +42,7 @@
 #define MOTOR_CH4_PWM_PIN                   LL_GPIO_PIN_15
 #define MOTOR_CH_PWM_PIN_AF                 LL_GPIO_AF_2
 
-/* Direction pins */
+/* Motor direction pins */
 #define MOTOR_CH1_DIR_PORT                  GPIOC
 #define MOTOR_CH1_DIR_PIN                   LL_GPIO_PIN_14
 #define MOTOR_CH2_DIR_PORT                  GPIOC

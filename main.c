@@ -94,13 +94,14 @@ int main() {
         NVIC_SetPriorityGrouping(0);
 
         xTaskCreateStatic(terminal_manager, "TERM_MAN", TERM_MAN_STACK_DEPTH,
-                          NULL, 2, terminal_manager_ts, &terminal_manager_tb);
+                          NULL, 3, terminal_manager_ts, &terminal_manager_tb);
         xTaskCreateStatic(motor_kinematics, "MOTOR_KIN", MOTOR_KIN_STACK_DEPTH,
                           NULL, 2, motor_kinematics_ts, &motor_kinematics_tb);
         xTaskCreateStatic(odometry, "ODOMETRY", ODOMETRY_STACK_DEPTH,
                           NULL, 2, odometry_ts, &odometry_tb);
-        xTaskCreateStatic(manipulators_manager, "MANIPULATORS", STM_DRIVER_STACK_DEPTH,
-                          NULL, 2, manipulators_ts, &manipulators_tb);
+        xTaskCreateStatic(manipulators_manager, "MANIPULATORS",
+                          STM_DRIVER_STACK_DEPTH, NULL, 2, manipulators_ts,
+                          &manipulators_tb);
 
         vTaskStartScheduler();
         return 0;

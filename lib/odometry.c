@@ -1,8 +1,9 @@
+#include <string.h>
+
 #include "odometry.h"
 #include "peripheral.h"
 #include "gpio_map.h"
 
-#include "string.h"
 #include "math.h"
 #include "arm_math.h"
 
@@ -104,7 +105,8 @@ static void odom_hw_config(odometry_ctrl_t *odom_ctrl)
                          LL_TIM_ACTIVEINPUT_DIRECTTI |
                          LL_TIM_IC_POLARITY_RISING);
         LL_TIM_SetAutoReload(ENCODER_1_TIM_MODULE, ENCODER_TIM_ARR);
-        LL_TIM_SetEncoderMode(ENCODER_1_TIM_MODULE, LL_TIM_ENCODERMODE_X4_TI12);
+        LL_TIM_SetEncoderMode(ENCODER_1_TIM_MODULE,
+                              LL_TIM_ENCODERMODE_X4_TI12);
         *(odom_ctrl->p_enc_ticks[0]) = ENCODER_TIM_CNT_INITIAL_VALUE;
 
         /*
@@ -118,7 +120,8 @@ static void odom_hw_config(odometry_ctrl_t *odom_ctrl)
                          LL_TIM_ACTIVEINPUT_DIRECTTI |
                          LL_TIM_IC_POLARITY_RISING);
         LL_TIM_SetAutoReload(ENCODER_2_TIM_MODULE, ENCODER_TIM_ARR);
-        LL_TIM_SetEncoderMode(ENCODER_2_TIM_MODULE, LL_TIM_ENCODERMODE_X4_TI12);
+        LL_TIM_SetEncoderMode(ENCODER_2_TIM_MODULE,
+                              LL_TIM_ENCODERMODE_X4_TI12);
         *(odom_ctrl->p_enc_ticks[1]) = ENCODER_TIM_CNT_INITIAL_VALUE;
 
         /*
@@ -132,7 +135,8 @@ static void odom_hw_config(odometry_ctrl_t *odom_ctrl)
                          LL_TIM_ACTIVEINPUT_DIRECTTI |
                          LL_TIM_IC_POLARITY_RISING);
         LL_TIM_SetAutoReload(ENCODER_3_TIM_MODULE, ENCODER_TIM_ARR);
-        LL_TIM_SetEncoderMode(ENCODER_3_TIM_MODULE, LL_TIM_ENCODERMODE_X4_TI12);
+        LL_TIM_SetEncoderMode(ENCODER_3_TIM_MODULE,
+                              LL_TIM_ENCODERMODE_X4_TI12);
         *(odom_ctrl->p_enc_ticks[2]) = ENCODER_TIM_CNT_INITIAL_VALUE;
 
         /*
@@ -218,11 +222,12 @@ static void odom_calc_glob_params(odometry_ctrl_t *odom_ctrl)
         /*
          * Rotation angle since last calculations
          */
-        float rot_angle = odom_ctrl->coordinate[2] + odom_ctrl->inst_local_speed[2];
+        float rot_angle = odom_ctrl->coordinate[2] +
+                          odom_ctrl->inst_local_speed[2];
         rot_angle = normalize_angle(rot_angle);
         /*
-         * Rotation matrix for ransformation of speed in robot coordinate system
-         * to global one
+         * Rotation matrix for ransformation of speed in robot coordinate
+         * system to global one
          */
         static arm_matrix_instance_f32 m_rot_matrix;
         float rot_matrix[4] = {

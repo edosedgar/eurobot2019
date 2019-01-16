@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "motor_kinematics.h"
 #include "peripheral.h"
 #include "gpio_map.h"
@@ -6,7 +8,6 @@
 #include "task.h"
 #include "semphr.h"
 
-#include "string.h"
 #include "math.h"
 #include "arm_math.h"
 

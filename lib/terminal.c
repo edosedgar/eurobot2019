@@ -1,11 +1,12 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "stm32f407xx.h"
 #include "stm32f4xx_ll_usart.h"
 #include "peripheral.h"
 #include "gpio_map.h"
 #include "terminal.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 #include "FreeRTOS.h"
 #include "task.h"
