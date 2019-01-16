@@ -55,6 +55,30 @@
 #define TERM_DMA_SRC_ADDR               (uint32_t)&(TERM_USART)->DR
 
 /*
+ * Stm driver configuration
+ * UART configuration
+ */
+#define STM_DRIVER_USART                      USART3
+#define STM_DRIVER_USART_IRQN                 USART3_IRQn
+#define STM_DRIVER_USART_IRQN_PRIORITY        1
+#define STM_DRIVER_USART_PERIPH_PRESCALER     4
+#define STM_DRIVER_USART_BAUDRATE             115200
+
+/*
+ * Stm driver configuration
+ * DMA configuration
+ */
+#define STM_DRIVER_DMA                        DMA1
+#define STM_DRIVER_DMA_CHANNEL                LL_DMA_CHANNEL_4
+#define STM_DRIVER_DMA_STREAM                 LL_DMA_STREAM_1
+#define STM_DRIVER_DMA_STREAM_IRQN            DMA1_Stream1_IRQn
+#define STM_DRIVER_DMA_STREAM_IRQN_PRIORITY   (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
+#define STM_DRIVER_DMA_DIRECTION              LL_DMA_DIRECTION_PERIPH_TO_MEMORY
+#define STM_DRIVER_DMA_BUFFER_SIZE            256
+#define STM_DRIVER_DMA_MEM_INC_MODE           LL_DMA_MEMORY_INCREMENT
+#define STM_DRIVER_DMA_SRC_ADDR               (uint32_t)&(STM_DRIVER_USART)->DR
+
+/*
  * Motor kinematics timer configuration
  * APB1_CLK = 42000000, TIM_ARR = 42000, Fpwm = 1KHz
  */

@@ -16,6 +16,22 @@
 #define TERM_USART_OUTPUT_TYPE              LL_GPIO_OUTPUT_PUSHPULL
 
 /*
+ * Stm driver UART pinout
+ */
+#define STM_DRIVER_USART_TX_PORT            GPIOC
+#define STM_DRIVER_USART_TX_PIN             LL_GPIO_PIN_10
+#define STM_DRIVER_USART_RX_PORT            GPIOC
+#define STM_DRIVER_USART_RX_PIN             LL_GPIO_PIN_11
+#define STM_DRIVER_USART_PIN_AF             LL_GPIO_AF_7
+
+/*
+ * GPIO for start/stop pumping
+ */
+#define MANIP_PUMP_PORT                     GPIOD
+#define MANIP_PUMP_PIN                      LL_GPIO_PIN_1
+#define MANIP_PUMP_OUTPUT_TYPE              LL_GPIO_OUTPUT_PUSHPULL
+
+/*
  * Motor kinematics pinout
  * PWM pins
  */

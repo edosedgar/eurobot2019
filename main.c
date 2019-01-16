@@ -11,6 +11,7 @@
 #include "terminal.h"
 #include "motor_kinematics.h"
 #include "odometry.h"
+#include "lib/manipulators.h"
 
 #include "Board.h"
 #include "Communication.h"
@@ -98,6 +99,8 @@ int main() {
                           NULL, 2, motor_kinematics_ts, &motor_kinematics_tb);
         xTaskCreateStatic(odometry, "ODOMETRY", ODOMETRY_STACK_DEPTH,
                           NULL, 2, odometry_ts, &odometry_tb);
+        xTaskCreateStatic(manipulators_manager, "MANIPULATORS", STM_DRIVER_STACK_DEPTH,
+                          NULL, 2, manipulators_ts, &manipulators_tb);
 
         vTaskStartScheduler();
         return 0;
