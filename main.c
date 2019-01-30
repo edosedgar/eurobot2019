@@ -99,9 +99,8 @@ int main() {
                           NULL, 2, motor_kinematics_ts, &motor_kinematics_tb);
         xTaskCreateStatic(odometry, "ODOMETRY", ODOMETRY_STACK_DEPTH,
                           NULL, 2, odometry_ts, &odometry_tb);
-        xTaskCreateStatic(manipulators_manager, "MANIPULATORS",
-                          STM_DRIVER_STACK_DEPTH, NULL, 2, manipulators_ts,
-                          &manipulators_tb);
+        xTaskCreateStatic(manipulators_manager, "MANIPULATORS", STM_DRIVER_STACK_DEPTH,
+                          NULL, 1, manipulators_ts, &manipulators_tb);
 
         vTaskStartScheduler();
         return 0;
