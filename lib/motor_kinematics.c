@@ -333,8 +333,8 @@ int cmd_set_pwm(void *args)
         memcpy(args, "OK", 3);
         return 3;
 error_set_pwm:
-        memcpy(args, "ERROR", 6);
-        return 6;
+        memcpy(args, "ER", 3);
+        return 3;
 }
 
 /*
@@ -364,6 +364,6 @@ int cmd_set_speed(void *args)
         memcpy(args, "OK", 3);
         return 3;
 error_set_speed:
-        memcpy(args, "ERROR", 6);
-        return 6;
+        memcpy(args, "ER", 3);
+        return 3;
 }

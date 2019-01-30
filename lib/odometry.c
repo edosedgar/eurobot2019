@@ -327,8 +327,8 @@ int cmd_get_speed(void *args)
         memcpy(args, odom_ctrl->inst_local_speed, 12);
         return 12;
 error_get_speed:
-        memcpy(args, "ERROR", 6);
-        return 6;
+        memcpy(args, "ER", 3);
+        return 3;
 }
 
 /*
@@ -354,8 +354,8 @@ int cmd_set_coord(void *args)
         memcpy(args, "OK", 3);
         return 3;
 error_set_coord:
-        memcpy(args, "ERROR", 6);
-        return 6;
+        memcpy(args, "ER", 3);
+        return 3;
 }
 
 /*
@@ -398,8 +398,8 @@ int cmd_get_wheel_speed(void *args)
         memcpy(args, odom_ctrl->wheel_speed, 12);
         return 12;
 error_get_wheels_speed:
-        memcpy(args, "ERROR", 6);
-        return 6;
+        memcpy(args, "ER", 3);
+        return 3;
 }
 
 /*
