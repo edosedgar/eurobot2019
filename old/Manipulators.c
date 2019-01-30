@@ -44,7 +44,7 @@ Manipulator_Subtasks_Typedef initManipulatorTaskSeq[] = {SUBTASK_CLOSE_MANIPULAT
 Manipulator_Subtasks_Typedef taskTerminator = SUBTASK_TERMINATOR;
 													 
 // Timer interrupt handler for servoChecker
-void TIM5_IRQHandler(void)
+__attribute__((weak)) void TIM5_IRQHandler(void)
 {
 	if (SERVO_CHECKER_TIM_MODULE->SR & TIM_SR_UIF)
 	{	  
