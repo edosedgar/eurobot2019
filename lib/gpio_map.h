@@ -79,7 +79,7 @@
  */
 #define STEP_MOTOR_PORT                     GPIOE  
 #define STEP_MOTOR_P1                       LL_GPIO_PIN_8
-#define STEP_MOTOR_P2                       LL_GPIO_PIN_8 // TODO DZA FUK
+#define STEP_MOTOR_P2                       LL_GPIO_PIN_6
 #define STEP_MOTOR_P3                       LL_GPIO_PIN_12
 #define STEP_MOTOR_P4                       LL_GPIO_PIN_5
 

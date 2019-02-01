@@ -52,63 +52,68 @@ static void step_hw_config(void)
 }
 
 /*
+ * Register pins for step motors driver
+ */
+static void step_reg_motor(uint8_t id, GPIO_TypeDef *GPIOx, uint32_t pin1,
+                           uint32_t pin2, uint32_t pin3, uint32_t pin4) {
+        step_ctrl[id].step_port = GPIOx;
+        step_ctrl[id].step_state_pins[0] = pin1 | pin3;
+        step_ctrl[id].step_state_pins[1] = pin2 | pin3;
+        step_ctrl[id].step_state_pins[2] = pin2 | pin4;
+        step_ctrl[id].step_state_pins[3] = pin4 | pin1;
+        step_ctrl[id].step_mask = pin1 | pin2 | pin3 | pin4;
+        return;
+}
+
+/*
+ * Register pin for limit switcher
+ */
+static void step_reg_limit_switch(uint8_t id, GPIO_TypeDef *GPIOx,
+                                  uint32_t pin) {
+        step_ctrl[id].limit_swtch_port = GPIOx;
+        step_ctrl[id].limit_swtch_pin = pin;
+        return;
+}
+
+/*
  * Make step for 1st motor
  */
-static void step_make_step1(void)
+static void step_make_step(uint8_t id)
 {
-        switch (abs(step_ctrl[0].current_step % 4)) {
-                case 0:
-                        LL_GPIO_SetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P4);
-                        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P3);
-                        LL_GPIO_SetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P2);
-                        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P1);
-                        break;
-                case 1:
-                        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P4);
-                        LL_GPIO_SetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P3);
-                        LL_GPIO_SetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P2);
-                        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P1);
-                        break;
-                case 2:
-                        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P4);
-                        LL_GPIO_SetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P3);
-                        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P2);
-                        LL_GPIO_SetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P1);
-                        break;
-                case 3:
-                        LL_GPIO_SetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P4);
-                        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P3);
-                        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P2);
-                        LL_GPIO_SetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P1);
-                        break;
-        }
+        uint32_t port_state = LL_GPIO_ReadInputPort(step_ctrl[id].step_port);
+
+        port_state &= ~step_ctrl[id].step_mask;
+        port_state |= step_ctrl[id].step_state_pins[step_ctrl[id].current_step
+                                                    & 0x03];
+        LL_GPIO_WriteOutputPort(step_ctrl[id].step_port, port_state);
         return;
 }
 
 /*
  * Stop 1st motor
  */
-static void step_stop1(void)
+static void step_stop(uint8_t id)
 {
-        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P1);
-        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P2);
-        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P3);
-        LL_GPIO_ResetOutputPin(STEP_MOTOR_PORT, STEP_MOTOR_P4);
+        uint32_t port_state = LL_GPIO_ReadInputPort(step_ctrl[id].step_port);
+
+        port_state &= ~step_ctrl[id].step_mask;
+        LL_GPIO_WriteOutputPort(step_ctrl[id].step_port, port_state);
+        return;
 }
 
 /*
  * End effector for 1st motor
  */
-static uint32_t step_end_effector(void)
+static uint32_t step_is_reached_limit(uint8_t id)
 {
-        return LL_GPIO_IsOutputPinSet(STEP_LIMIT_SWITCH_PORT,
-                                      STEP_LIMIT_SWITCH_PIN);
+        return LL_GPIO_IsInputPinSet(step_ctrl[id].limit_swtch_port,
+                                     step_ctrl[id].limit_swtch_pin);
 }
 
 /*
  * Public functions
  */
-void step_init(step_ctrl_t *step_ctrl)
+void step_init(void)
 {
         int i = 0;
 
@@ -117,20 +122,22 @@ void step_init(step_ctrl_t *step_ctrl)
          */
         step_hw_config();
         /*
+         * Register step motor and corresponding limit switch
+         */
+        step_reg_motor(0, STEP_MOTOR_PORT, STEP_MOTOR_P1, STEP_MOTOR_P2,
+                       STEP_MOTOR_P3, STEP_MOTOR_P4);
+        step_reg_limit_switch(0, STEP_LIMIT_SWITCH_PORT, STEP_LIMIT_SWITCH_PIN);
+        /*
          * Set default speed and clear calibration flag for all step motors
          */
         for (i = 0; i < NUMBER_OF_STEP_MOTORS; i++) {
-                step_set_speed(i, REV_PER_SEC_1_75);
+                step_ctrl[i].current_tick = 0;
+                step_ctrl[i].goal_step = 0;
+                step_set_speed(i, REV_PER_SEC_10);
                 step_clr_flag(step_ctrl[i], STEP_RUNNING);
                 step_clr_flag(step_ctrl[i], STEP_CALIBRATED);
                 step_clr_flag(step_ctrl[i], STEP_START_CALIBRATION);
         }
-        /*
-         * Assign private function for step motor movement
-         */
-        step_ctrl[0].step_make_step = step_make_step1;
-        step_ctrl[0].step_stop = step_stop1;
-        step_ctrl[0].step_end_effector = step_end_effector;
         return;
 }
 
@@ -138,6 +145,7 @@ int step_start_calibration(uint8_t id)
 {
         if (!IS_VALID_ID(id))
                 return -1;
+        step_clr_flag(step_ctrl[id], STEP_CALIBRATED);
         step_set_flag(step_ctrl[id], STEP_START_CALIBRATION);
         LL_TIM_EnableCounter(STEP_TIM);
         return 0;
@@ -165,10 +173,11 @@ int step_set_step_goal(uint8_t id, int goal_step)
                 return -1;
         if (abs(goal_step - step_ctrl[id].current_step > MAX_STEPS))
                 return -1;
-        if (!is_step_flag_set(step_ctrl[id], STEP_RUNNING) ||
+        if (is_step_flag_set(step_ctrl[id], STEP_RUNNING) ||
             !is_step_flag_set(step_ctrl[id], STEP_CALIBRATED))
                 return -1;
         step_ctrl[id].goal_step = goal_step;
+        LL_TIM_EnableCounter(STEP_TIM);
         return 0;
 }
 
@@ -181,40 +190,38 @@ void TIM5_IRQHandler(void)
         int i = 0;
         int leave_steps = 0;
 
-        LL_TIM_ClearFlag_UPDATE(ODOMETRY_TIM_MODULE);
+        LL_TIM_ClearFlag_UPDATE(STEP_TIM);
         for (i = 0; i < NUMBER_OF_STEP_MOTORS; i++) {
                 step_ctrl[i].current_tick++;
-                if (step_ctrl[i].current_tick == step_ctrl[i].step_delay_ticks
+                if (step_ctrl[i].current_tick >= step_ctrl[i].step_delay_ticks
                     && is_step_flag_set(step_ctrl[i], STEP_CALIBRATED)) {
                         step_ctrl[i].current_tick = 0;
                         leave_steps = step_ctrl[i].goal_step -
                                       step_ctrl[i].current_step;
-                        if (leave_steps > 0) {
+                        if (leave_steps) {
                                 step_set_flag(step_ctrl[i], STEP_RUNNING);
-                                step_ctrl[i].current_step++;
-                                step_ctrl[i].step_make_step();
-                        }
-                        if (leave_steps < 0) {
-                                step_set_flag(step_ctrl[i], STEP_RUNNING);
-                                step_ctrl[i].current_step--;
-                                step_ctrl[i].step_make_step();
-                        }
-                        else {
-                                step_ctrl[i].step_stop();
+                                step_ctrl[i].current_step +=
+                                             (leave_steps > 0 ? 1 : -1);
+                                step_make_step(i);
+                        } else {
+                                step_stop(i);
                                 step_clr_flag(step_ctrl[i], STEP_RUNNING);
+                                LL_TIM_DisableCounter(STEP_TIM);
                         }
                 }
                 if (is_step_flag_set(step_ctrl[i], STEP_START_CALIBRATION)) {
                         step_set_flag(step_ctrl[i], STEP_RUNNING);
-                        step_ctrl[i].step_make_step();
+                        step_make_step(i);
                         step_ctrl[i].current_step--;
-                        if (step_ctrl[0].step_end_effector()) {
-                                step_ctrl[i].step_stop();
+                        if (step_is_reached_limit(i)) {
+                                step_stop(i);
                                 step_ctrl[i].current_step = 0;
                                 step_set_flag(step_ctrl[i], STEP_CALIBRATED);
                                 step_clr_flag(step_ctrl[i], STEP_RUNNING);
                                 step_clr_flag(step_ctrl[i],
                                               STEP_START_CALIBRATION);
+                                step_ctrl[i].current_tick = 0;
+                                LL_TIM_DisableCounter(STEP_TIM);
                         }
                 }
                 

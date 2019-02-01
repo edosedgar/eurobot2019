@@ -80,12 +80,12 @@
 
 /*
  * Srtepper motor timer
- * APB1_CLK = 42000000, T = 500 ms
+ * APB1_CLK = 42000000, T = 500 mcs
  */
 #define STEP_TIM                                TIM5
 #define STEP_TIM_MODE                           LL_TIM_COUNTERMODE_UP
-#define STEP_TIM_ARR                            500
-#define STEP_TIM_PSC                            41999
+#define STEP_TIM_ARR                            1000
+#define STEP_TIM_PSC                            419
 #define STEP_TIM_IRQN                           TIM5_IRQn
 #define STEP_TIM_IRQN_PRIORITY                  1
 

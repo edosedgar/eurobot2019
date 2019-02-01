@@ -2,11 +2,12 @@
 #define _STEPPER_H_
 
 #include <stdint.h>
+#include "stm32f407xx.h"
 
 #include "dev_map.h"
 
 #define STEPS_PER_REVOLUTION        200
-#define MAX_STEPS                   1000 // TODO change
+#define MAX_STEPS                   100000 // TODO change
 
 #define IS_VALID_ID(id)             ((id) < NUMBER_OF_STEP_MOTORS)
 
@@ -48,13 +49,15 @@ typedef struct {
         int step_delay_ticks;
         int current_step;
         int goal_step;
-        void (*step_make_step)(void);
-        void (*step_stop)(void);
-        uint32_t (*step_end_effector)(void);
+        GPIO_TypeDef *step_port;
+        uint32_t step_state_pins[4];
+        uint32_t step_mask;
+        GPIO_TypeDef *limit_swtch_port;
+        uint32_t limit_swtch_pin;
         uint8_t flags;
 } step_ctrl_t;
 
-void step_init();
+void step_init(void);
 int step_start_calibration(uint8_t id);
 int step_is_calibrated(uint8_t id);
 int step_set_speed(uint8_t id, step_speed_t rev_per_sec);

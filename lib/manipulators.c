@@ -11,6 +11,7 @@
 #include "task.h"
 #include "terminal_cmds.h"
 #include "motor_kinematics.h"
+#include "stepper.h"
 
 /*
  * Private task notifier
@@ -128,10 +129,14 @@ void manipulators_manager(void *arg)
         manip_ctrl_st.manip_notify = xTaskGetCurrentTaskHandle();
         manip_ctrl_st.stm_dr_buff = malloc(STM_DRIVER_BUF_SIZE);
         manip_ctrl_st.flags = 0x00;
+        for (i = 0;i < MAX_COMMANDS; i++) {
+                memset(manip_ctrl_st.dyn_cmd[i].cmd_buff, 0, 10);
+                manip_ctrl_st.dyn_cmd[i].delay_ms = 0;
+        }
         manip_ctrl = &manip_ctrl_st;
         manip_hw_config();
         stm_driver_hw_config(&manip_ctrl_st);
-
+        step_init();
         while (1) {
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 for (i = 0; i < manip_ctrl->cmd_len; i++) {
@@ -147,6 +152,32 @@ void manipulators_manager(void *arg)
 /*
  * Set of motor related handlers for terminal
  */
+
+/*
+ * Start step motor calibration
+ */
+int cmd_step_calibrate(char *args)
+{
+        step_start_calibration(0);
+        memcpy(args, "OK", 3);
+        return 3;
+}
+
+/*
+ * Set desired step for step motor
+ */
+int cmd_step_set_step(char *args)
+{
+        if (!step_is_calibrated(0))
+                goto error_step_set_step;
+        if (step_set_step_goal(0, 10000))
+                goto error_step_set_step;
+        memcpy(args, "OK", 3);
+        return 3;
+error_step_set_step:
+        memcpy(args, "ER", 3);
+        return 3;
+}
 
 /*
  * Set pump to ground
