@@ -74,4 +74,19 @@
 #define ENCODER_3_CHB_PIN                   LL_GPIO_PIN_9
 #define ENCODER_3_PIN_AF                    LL_GPIO_AF_1
 
+/*
+ * Stepper motor pins
+ */
+#define STEP_MOTOR_PORT                     GPIOE  
+#define STEP_MOTOR_P1                       LL_GPIO_PIN_8
+#define STEP_MOTOR_P2                       LL_GPIO_PIN_6
+#define STEP_MOTOR_P3                       LL_GPIO_PIN_12
+#define STEP_MOTOR_P4                       LL_GPIO_PIN_5
+
+/*
+ * Limit switch pin for step motor calibration
+ */
+#define STEP_LIMIT_SWITCH_PORT             GPIOA // TODO CHANGE!!!
+#define STEP_LIMIT_SWITCH_PIN              LL_GPIO_PIN_0
+
 #endif

@@ -29,7 +29,7 @@ static void terminal_hw_config(char *ch_buf)
         LL_GPIO_SetPinOutputType(TERM_USART_TX_PORT, TERM_USART_TX_PIN,
                                  TERM_USART_OUTPUT_TYPE);
         LL_GPIO_SetPinPull(TERM_USART_TX_PORT, TERM_USART_TX_PIN,
-                           LL_GPIO_PULL_UP);
+                           LL_GPIO_PULL_NO);
         LL_GPIO_SetPinSpeed(TERM_USART_TX_PORT, TERM_USART_TX_PIN,
                             LL_GPIO_SPEED_FREQ_HIGH);
 
@@ -40,7 +40,7 @@ static void terminal_hw_config(char *ch_buf)
         LL_GPIO_SetPinOutputType(TERM_USART_RX_PORT, TERM_USART_RX_PIN,
                                  TERM_USART_OUTPUT_TYPE);
         LL_GPIO_SetPinPull(TERM_USART_RX_PORT, TERM_USART_RX_PIN,
-                           LL_GPIO_PULL_UP);
+                           LL_GPIO_PULL_NO);
         LL_GPIO_SetPinSpeed(TERM_USART_RX_PORT, TERM_USART_RX_PIN,
                             LL_GPIO_SPEED_FREQ_HIGH);
 
