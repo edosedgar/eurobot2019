@@ -168,13 +168,57 @@ int cmd_step_calibrate(char *args)
  */
 int cmd_step_set_step(char *args)
 {
+        uint32_t *step_goal = (uint32_t *) args;
+
         if (!step_is_calibrated(0))
                 goto error_step_set_step;
-        if (step_set_step_goal(0, 10000))
+        if (step_set_step_goal(0, *step_goal))
                 goto error_step_set_step;
         memcpy(args, "OK", 3);
         return 3;
 error_step_set_step:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Make step down for one pack
+ */
+int cmd_step_down(char *args)
+{
+        uint32_t cur_step = 0;
+        uint32_t goal_step = 0;
+
+        if (!step_is_calibrated(0))
+                goto error_step_down;
+        cur_step = step_get_current_step(0);
+        goal_step = cur_step + PACK_SIZE_IN_STEPS;
+        if (step_set_step_goal(0, goal_step))
+                goto error_step_down;
+        memcpy(args, "OK", 3);
+        return 3;
+error_step_down:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Make step up for one pack
+ */
+int cmd_step_up(char *args)
+{
+        uint32_t cur_step = 0;
+        uint32_t goal_step = 0;
+
+        if (!step_is_calibrated(0))
+                goto error_step_up;
+        cur_step = step_get_current_step(0);
+        goal_step = cur_step - PACK_SIZE_IN_STEPS;
+        if (step_set_step_goal(0, goal_step))
+                goto error_step_up;
+        memcpy(args, "OK", 3);
+        return 3;
+error_step_up:
         memcpy(args, "ER", 3);
         return 3;
 }
