@@ -414,6 +414,161 @@ error_grab_pack:
 }
 
 /*
+ * Move collector to default state for grabbing next pack
+ */
+int cmd_collector_default(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_collector_default;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x00, 0x0000, 00); //TODO change values
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_collector_default:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Move collector to right state for collecting pack in right container
+ */
+int cmd_collector_right(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_collector_right;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x00, 0x0000, 00); //TODO change values
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_collector_right:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Move collector to left state for collecting pack in left container
+ */
+int cmd_collector_left(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_collector_left;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x00, 0x0000, 00); //TODO change values
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_collector_left:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Move pack releaser to default state before throwing
+ */
+int cmd_releaser_default(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_releaser_default;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x00, 0x0000, 00); //TODO change values
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_releaser_default:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Throw pack with pack releaser
+ */
+int cmd_releaser_throw(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_releaser_throw;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x00, 0x0000, 00); //TODO change values
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_releaser_throw:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
  * Start pumping
  */
 int cmd_start_pump(char *args)
