@@ -8,7 +8,7 @@
 
 #define STEPS_PER_REVOLUTION        200
 #define PACK_SIZE_IN_STEPS          620
-#define NUMBER_OF_PACKS             6
+#define NUMBER_OF_PACKS             7
 #define MAX_STEPS                   NUMBER_OF_PACKS * PACK_SIZE_IN_STEPS
 
 #define IS_VALID_ID(id)             ((id) < NUMBER_OF_STEP_MOTORS)

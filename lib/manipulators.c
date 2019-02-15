@@ -236,9 +236,9 @@ int cmd_set_pump_ground(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0330, 50);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0190, 50);
-        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x036B, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0330, 10);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0190, 100);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x036B, 400);
         manip_ctrl->cmd_len = 3;
         /*
          * Notify manipulators manager
@@ -269,8 +269,8 @@ int cmd_set_pump_wall(char *args)
          /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0262, 50);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01C8, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0262, 10);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01C8, 200);
         manip_ctrl->cmd_len = 2;
         /*
          * Notify manipulators manager
@@ -301,8 +301,8 @@ int cmd_set_pump_platform(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0159, 50);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0200, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0159, 10);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0200, 400);
         manip_ctrl->cmd_len = 2;
         /*
          * Notify manipulators manager
@@ -333,7 +333,7 @@ int cmd_release_grabber(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x0184, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x00df, 100);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -364,7 +364,7 @@ int cmd_prop_pack(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x023E, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x01b8, 100);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -395,7 +395,7 @@ int cmd_grab_pack(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x02EB, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x026c, 700);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -409,6 +409,68 @@ int cmd_grab_pack(char *args)
         return 3;
 
 error_grab_pack:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Releaser set to default position
+ */
+int cmd_releaser_default(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_releaser_default;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x01c8, 300);
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_releaser_default:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Releaser throw pack
+ */
+int cmd_releaser_throw(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_releaser_throw;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x032f, 400);
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_releaser_throw:
         memcpy(args, "ER", 3);
         return 3;
 }
@@ -437,7 +499,7 @@ error_start_pump:
         return 3;
 }
 
- /*
+/*
  * Stop pumping
  */
 int cmd_stop_pump(char *args)
