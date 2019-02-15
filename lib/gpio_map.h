@@ -77,16 +77,29 @@
 /*
  * Stepper motor pins
  */
-#define STEP_MOTOR_PORT                     GPIOE  
-#define STEP_MOTOR_P1                       LL_GPIO_PIN_8
-#define STEP_MOTOR_P2                       LL_GPIO_PIN_6
-#define STEP_MOTOR_P3                       LL_GPIO_PIN_12
-#define STEP_MOTOR_P4                       LL_GPIO_PIN_5
+#define STEP_MOTOR1_PORT                    GPIOE
+#define STEP_MOTOR1_P1                      LL_GPIO_PIN_8
+#define STEP_MOTOR1_P2                      LL_GPIO_PIN_6
+#define STEP_MOTOR1_P3                      LL_GPIO_PIN_12
+#define STEP_MOTOR1_P4                      LL_GPIO_PIN_5
+#define STEP_MOTOR2_PORT                    GPIOB
+#define STEP_MOTOR2_P4                      LL_GPIO_PIN_2
+#define STEP_MOTOR2_P3                      LL_GPIO_PIN_14
+#define STEP_MOTOR2_P2                      LL_GPIO_PIN_13
+#define STEP_MOTOR2_P1                      LL_GPIO_PIN_15
+/*
+ * Connected to PB2 on the board. TODO fix in next PCB version
+ */
+#define STEP_MOTOR2_PORT_REMAP              GPIOE
+#define STEP_MOTOR2_P1_REMAP                LL_GPIO_PIN_13
 
 /*
  * Limit switch pin for step motor calibration
  */
-#define STEP_LIMIT_SWITCH_PORT             GPIOD
-#define STEP_LIMIT_SWITCH_PIN              LL_GPIO_PIN_0
+#define STEP_LIMIT_SWITCH1_PORT            GPIOD
+#define STEP_LIMIT_SWITCH1_PIN             LL_GPIO_PIN_2
+#define STEP_LIMIT_SWITCH2_PORT            GPIOD
+#define STEP_LIMIT_SWITCH2_PIN             LL_GPIO_PIN_0
+
 
 #endif
