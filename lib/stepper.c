@@ -160,6 +160,13 @@ int step_is_calibrated(uint8_t id)
         return is_step_flag_set(step_ctrl[id], STEP_CALIBRATED);
 }
 
+int step_is_running(uint8_t id)
+{
+        if (!IS_VALID_ID(id))
+                return -1;
+       return is_step_flag_set(step_ctrl[id], STEP_RUNNING);
+}
+
 int step_set_speed(uint8_t id, step_speed_t rev_per_sec)
 {
         if (!IS_VALID_ID(id))
