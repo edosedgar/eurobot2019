@@ -228,9 +228,7 @@ error_step_up:
 */
 int cmd_step_is_running(char *args)
 {
-        uint8_t *id = (uint8_t *) args;
-
-        if (step_is_running(*id))
+        if (step_is_running(0))
                 goto error_step_is_running;
         memcpy(args, "OK", 3);
         return 3;
@@ -287,8 +285,8 @@ int cmd_set_pump_wall(char *args)
          /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0262, 10);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01C8, 200);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02B2, 10);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0238, 200);
         manip_ctrl->cmd_len = 2;
         /*
          * Notify manipulators manager
@@ -319,9 +317,14 @@ int cmd_set_pump_platform(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0159, 10);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0200, 800);
-        manip_ctrl->cmd_len = 2;
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0206, 500);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0257, 100);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x01ab, 100);
+        DYN_SET_ANGLE(manip_ctrl, 3, 0x02, 0x0220, 200);
+        DYN_SET_ANGLE(manip_ctrl, 4, 0x01, 0x0165, 200);
+        DYN_SET_ANGLE(manip_ctrl, 5, 0x02, 0x0200, 200);
+        DYN_SET_ANGLE(manip_ctrl, 6, 0x01, 0x014f, 200);
+        manip_ctrl->cmd_len = 7;
         /*
          * Notify manipulators manager
          */
