@@ -96,7 +96,7 @@ void I2C2_ER_IRQHandler()
 }
 
 // Interrupt for Local time timer (that counts in ms)
-void TIM7_IRQHandler()
+__attribute__((weak)) void TIM7_IRQHandler()
 {
 	if (LOCAL_TIME_TIM_MODULE->SR & TIM_SR_UIF)
 	{
