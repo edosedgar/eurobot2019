@@ -25,7 +25,7 @@ void TIM5_IRQHandler(void);
 void I2C2_ER_IRQHandler(void);
 
 // Interrupt for Local time timer (that counts in ms)
-void TIM7_IRQHandler(void);
+__attribute__((weak)) void TIM7_IRQHandler(void);
 
 // Interrupt handler for external startup interrupt
 void EXTI1_IRQHandler(void);

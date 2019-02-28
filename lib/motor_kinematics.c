@@ -111,21 +111,21 @@ static void mk_speed2pwm(motors_ctrl_t *mk_ctrl)
 static void mk_set_pwm(float *pwm_values)
 {
         if (pwm_values[0] > 0.0f)
-                LL_GPIO_SetOutputPin(MOTOR_CH1_DIR_PORT,MOTOR_CH1_DIR_PIN);
+                LL_GPIO_SetOutputPin(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN);
         else
                 LL_GPIO_ResetOutputPin(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN);
         LL_TIM_OC_SetCompareCH1(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[0]) *
                                 MOTOR_PWM_TIM_ARR));
 
         if (pwm_values[1] > 0.0f)
-                LL_GPIO_SetOutputPin(MOTOR_CH2_DIR_PORT,MOTOR_CH2_DIR_PIN);
+                LL_GPIO_SetOutputPin(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN);
         else
                 LL_GPIO_ResetOutputPin(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN);
         LL_TIM_OC_SetCompareCH2(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[1]) *
                                 MOTOR_PWM_TIM_ARR));
 
         if (pwm_values[2] > 0.0f)
-                LL_GPIO_SetOutputPin(MOTOR_CH3_DIR_PORT,MOTOR_CH3_DIR_PIN);
+                LL_GPIO_SetOutputPin(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN);
         else
                 LL_GPIO_ResetOutputPin(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN);
         LL_TIM_OC_SetCompareCH3(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[2]) *
@@ -221,20 +221,59 @@ static void mk_hw_config()
         /* Enable timer */
         LL_TIM_GenerateEvent_UPDATE(MOTOR_TIM);
         LL_TIM_EnableCounter(MOTOR_TIM);
+
+        /* Setting EXTI PIN */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
+        LL_GPIO_SetPinMode(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_MODE_INPUT);
+        LL_GPIO_SetPinPull(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_PULL_NO);
+
+        /* Setting EXTI0 line */
+        LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+        LL_SYSCFG_SetEXTISource(MOTOR_CORD_SYS_EXTI_PORT,
+                                MOTOR_CORD_SYS_EXTI_LINE);
+        LL_EXTI_EnableIT_0_31(MOTOR_CORD_EXTI_LINE);
+        LL_EXTI_EnableFallingTrig_0_31(MOTOR_CORD_EXTI_LINE);
+        /* Setting EXTI interrupts */
+        NVIC_EnableIRQ(MOTOR_CORD_EXTI_IRQN);
+        NVIC_SetPriority(MOTOR_CORD_EXTI_IRQN, MOTOR_CORD_EXTI_IRQN_PIORITY);
+
+        /* Setting robot operating timer */
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
+        LL_TIM_SetCounterMode(MOTOR_OPERATING_TIM, LL_TIM_COUNTERMODE_UP);
+        LL_TIM_SetAutoReload(MOTOR_OPERATING_TIM, MOTOR_OPERATING_TIM_ARR);
+        LL_TIM_SetPrescaler(MOTOR_OPERATING_TIM, MOTOR_OPERATING_TIM_PSC);
+        LL_TIM_EnableIT_UPDATE(MOTOR_OPERATING_TIM);
+
+        /* Setting robot operating interrupt */
+        NVIC_SetPriority(MOTOR_OPERATING_TIM_IRQN,
+                         MOTOR_OPERATING_TIM_IRQN_PRIORITY);
+        NVIC_EnableIRQ(MOTOR_OPERATING_TIM_IRQN);
         return;
 }
 
 static void mk_set_pwm_ctrl(motors_ctrl_t *mk_ctrl)
 {
-        mk_ctrl->status |= MK_PWM_CONTROL_BIT;
-        mk_ctrl->status &= ~MK_SPEED_CONTROL_BIT;
+        mk_ctrl->status |= MK_PWM_CONTROL;
+        mk_ctrl->status &= ~MK_SPEED_CONTROL;
         return;
 }
 
 static void mk_set_speed_ctrl(motors_ctrl_t *mk_ctrl)
 {
-        mk_ctrl->status |= MK_SPEED_CONTROL_BIT;
-        mk_ctrl->status &= ~MK_PWM_CONTROL_BIT;
+        mk_ctrl->status |= MK_SPEED_CONTROL;
+        mk_ctrl->status &= ~MK_PWM_CONTROL;
+        return;
+}
+
+static void mk_set_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
+{
+        mk_ctrl->status |= MK_STOP_MOTORS;
+        return;
+}
+
+static void mk_clr_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
+{
+        mk_ctrl->status &= ~(MK_STOP_MOTORS);
         return;
 }
 /*
@@ -268,13 +307,18 @@ void motor_kinematics(void *arg)
         mk_ctrl_st.mk_notify = xTaskGetCurrentTaskHandle();
         mk_ctrl = &mk_ctrl_st;
 
+        /*
+         * Stop motors and wait for starting cord
+         */
+        mk_set_stop_motors_ctrl(mk_ctrl);
+
         while (1) {
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
                 /*
                  * If one stopped motors immediately reset all pwm values
                  */
-                if (mk_ctrl->status & MK_STOP_MOTORS_BIT) {
+                if (mk_ctrl->status & MK_STOP_MOTORS) {
                         mk_ctrl->pwm_motors[0] = 0.1f;
                         mk_ctrl->pwm_motors[1] = 0.1f;
                         mk_ctrl->pwm_motors[2] = 0.1f;
@@ -284,8 +328,8 @@ void motor_kinematics(void *arg)
                  * was switched to speed mode call mk_speed2pwm to calculate
                  * matrix kinematics
                  */
-                if (mk_ctrl->status & MK_SPEED_CONTROL_BIT &&
-                    !(mk_ctrl->status & MK_STOP_MOTORS_BIT)) {
+                if (mk_ctrl->status & MK_SPEED_CONTROL &&
+                    !(mk_ctrl->status & MK_STOP_MOTORS)) {
                         mk_speed2pwm(mk_ctrl);
                 }
                 /*
@@ -366,4 +410,39 @@ int cmd_set_speed(void *args)
 error_set_speed:
         memcpy(args, "ER", 3);
         return 3;
+}
+
+/*
+ * Hardware interrupts
+ * Staring cord handler
+ */
+void EXTI3_IRQHandler(void)
+{
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+        mk_clr_stop_motors_ctrl(mk_ctrl);
+        //LL_TIM_EnableCounter(MOTOR_OPERATING_TIM); //Uncomment for timeout control
+        vTaskNotifyGiveFromISR(mk_ctrl->mk_notify, &xHigherPriorityTaskWoken);
+        LL_EXTI_ClearFlag_0_31(MOTOR_CORD_EXTI_LINE);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+/*
+ * Robot operating timer
+ */
+void TIM7_IRQHandler(void)
+{
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        static uint32_t seconds_from_start = 0;
+        static float stop_motors[] = {0.0f, 0.0f, 0.0f};
+
+        if (LL_TIM_IsActiveFlag_UPDATE(MOTOR_OPERATING_TIM)) {
+                LL_TIM_ClearFlag_UPDATE(MOTOR_OPERATING_TIM);
+                seconds_from_start++;
+                if (seconds_from_start >= MOTOR_OPERATING_TIME) {
+                        mk_set_stop_motors_ctrl(mk_ctrl);
+                        mk_set_pwm(stop_motors);
+                }
+        }
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

@@ -6,6 +6,11 @@
 #include "semphr.h"
 
 /*
+ * Robot's movement time allowed in seconds
+ */
+#define MOTOR_OPERATING_TIME           100
+
+/*
  * SET_PWM command args structure
  */
 typedef struct {

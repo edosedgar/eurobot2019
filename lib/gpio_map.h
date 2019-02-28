@@ -53,6 +53,12 @@
 #define MOTOR_CH4_DIR_PIN                   LL_GPIO_PIN_14
 
 /*
+ * Starting cord pinout
+ */
+#define MOTOR_CORD_PORT                     GPIOD
+#define MOTOR_CORD_PIN                      LL_GPIO_PIN_3
+
+/*
  * Odometry pinout
  * Encoder pins
  */
