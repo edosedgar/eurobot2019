@@ -9,6 +9,10 @@
  * Robot's movement time allowed in seconds
  */
 #define MOTOR_OPERATING_TIME           99
+#define ROBOT_SESSION_COMPETITION       0
+#define ROBOT_SESSION_DEBUG             1
+#define ROBOT_SIDE_RIGHT                0
+#define ROBOT_SIDE_LEFT                 1
 
 /*
  * SET_PWM command args structure
@@ -48,9 +52,6 @@ enum mk_flags {
         ENUM_FLAG(MK_STOP_MOTORS)
 };
 
-#define ROBOT_SESSION_COMPETITION       0
-#define ROBOT_SESSION_DEBUG             1
-
 #define is_manip_flag_set(manip_ctrl, bit) \
         (manip_ctrl->flags & bit)
 
@@ -58,6 +59,7 @@ typedef struct {
         int status;
         uint8_t session;
         uint8_t cord_status;
+        uint8_t side;
         float vel_x;
         float vel_y;
         float wz;
