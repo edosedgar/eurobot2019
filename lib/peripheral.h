@@ -126,15 +126,6 @@
 #define ODOMETRY_TIM_PSC                        20
 
 /*
- * Starting cord EXTI
- */
-#define MOTOR_CORD_SYS_EXTI_PORT                LL_SYSCFG_EXTI_PORTD //TODO change
-#define MOTOR_CORD_SYS_EXTI_LINE                LL_SYSCFG_EXTI_LINE3
-#define MOTOR_CORD_EXTI_LINE                    LL_EXTI_LINE_3
-#define MOTOR_CORD_EXTI_IRQN                    EXTI3_IRQn
-#define MOTOR_CORD_EXTI_IRQN_PIORITY            (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
-
-/*
  * Robot operating timer
  * APB1_CLK = 64000000, TIM_PCS = 41999, TIM_ARR = 2000, freq = 1Hz
  */

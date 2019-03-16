@@ -1,5 +1,7 @@
 TERM_CMD_DEF(0x01, ECHO,                        echo_handler)
-TERM_CMD_DEF(0x03, SET_PWM,                     set_pwm)
+TERM_CMD_DEF(0x02, SET_ROBOT_SESSION,           set_robot_session)
+TERM_CMD_DEF(0x03, READ_CORD_STATUS,            read_cord_status)
+TERM_CMD_DEF(0x04, SET_PWM,                     set_pwm)
 TERM_CMD_DEF(0x07, GET_WHEEL_SPEED,             get_wheel_speed)
 TERM_CMD_DEF(0x08, SET_SPEED,                   set_speed)
 TERM_CMD_DEF(0x09, GET_SPEED,                   get_speed)
