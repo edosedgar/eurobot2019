@@ -56,7 +56,7 @@
  * Starting cord pinout
  */
 #define MOTOR_CORD_PORT                     GPIOD
-#define MOTOR_CORD_PIN                      LL_GPIO_PIN_3
+#define MOTOR_CORD_PIN                      LL_GPIO_PIN_2
 
 /*
  * Odometry pinout

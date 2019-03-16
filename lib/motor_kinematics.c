@@ -222,20 +222,10 @@ static void mk_hw_config()
         LL_TIM_GenerateEvent_UPDATE(MOTOR_TIM);
         LL_TIM_EnableCounter(MOTOR_TIM);
 
-        /* Setting EXTI PIN */
+        /* Setting cord pin */
         LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
         LL_GPIO_SetPinMode(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_MODE_INPUT);
         LL_GPIO_SetPinPull(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_PULL_NO);
-
-        /* Setting EXTI0 line */
-        LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
-        LL_SYSCFG_SetEXTISource(MOTOR_CORD_SYS_EXTI_PORT,
-                                MOTOR_CORD_SYS_EXTI_LINE);
-        LL_EXTI_EnableIT_0_31(MOTOR_CORD_EXTI_LINE);
-        LL_EXTI_EnableFallingTrig_0_31(MOTOR_CORD_EXTI_LINE);
-        /* Setting EXTI interrupts */
-        NVIC_EnableIRQ(MOTOR_CORD_EXTI_IRQN);
-        NVIC_SetPriority(MOTOR_CORD_EXTI_IRQN, MOTOR_CORD_EXTI_IRQN_PIORITY);
 
         /* Setting robot operating timer */
         LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
@@ -244,7 +234,7 @@ static void mk_hw_config()
         LL_TIM_SetPrescaler(MOTOR_OPERATING_TIM, MOTOR_OPERATING_TIM_PSC);
         LL_TIM_EnableIT_UPDATE(MOTOR_OPERATING_TIM);
 
-        /* Setting robot operating interrupt */
+        /* Setting robot operating timer interrupt */
         NVIC_SetPriority(MOTOR_OPERATING_TIM_IRQN,
                          MOTOR_OPERATING_TIM_IRQN_PRIORITY);
         NVIC_EnableIRQ(MOTOR_OPERATING_TIM_IRQN);
@@ -276,6 +266,12 @@ static void mk_clr_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
         mk_ctrl->status &= ~(MK_STOP_MOTORS);
         return;
 }
+
+static uint8_t read_cord_status(void)
+{
+        return (uint8_t) LL_GPIO_IsInputPinSet(MOTOR_CORD_PORT, MOTOR_CORD_PIN);
+}
+
 /*
  * End of section with helper functions
  */
@@ -296,6 +292,8 @@ void motor_kinematics(void *arg)
          */
         motors_ctrl_t mk_ctrl_st = {
                 .status = 0x00,
+                .session = ROBOT_SESSION_COMPETITION,
+                .cord_status = 0,
                 .vel_x = 0.0f,
                 .vel_y = 0.0f,
                 .wz = 0.0f,
@@ -345,6 +343,43 @@ void motor_kinematics(void *arg)
 /*
  * Set of motor related handlers for terminal
  */
+
+/*
+ * Command for setting debug session. In debug session ignore starting cord
+ * and robot operating timer
+ */
+int cmd_set_robot_session(void *args)
+{
+        /*
+         * Check whether kinematics ready or not
+         */
+        if (!mk_ctrl)
+                goto error_set_robot_session;
+
+        mk_ctrl->session = ROBOT_SESSION_DEBUG;
+        mk_clr_stop_motors_ctrl(mk_ctrl);
+        memcpy(args, "OK", 3);
+        return 3;
+error_set_robot_session:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Command for reading starting cord status. After cord disattached, start robot
+ * operating timer.
+ */
+int cmd_read_cord_status(void *args)
+{
+        mk_ctrl->cord_status = read_cord_status();
+        if (mk_ctrl->cord_status == 1) {
+                mk_clr_stop_motors_ctrl(mk_ctrl);
+                LL_TIM_EnableCounter(MOTOR_OPERATING_TIM);
+                xTaskNotifyGive(mk_ctrl->mk_notify);
+        }
+        memcpy(args, &mk_ctrl->cord_status, 1);
+        return 1;
+}
 
 /*
  * Set motors pwm command
@@ -412,20 +447,6 @@ error_set_speed:
         return 3;
 }
 
-/*
- * Hardware interrupts
- * Staring cord handler
- */
-void EXTI3_IRQHandler(void)
-{
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-        mk_clr_stop_motors_ctrl(mk_ctrl);
-        //LL_TIM_EnableCounter(MOTOR_OPERATING_TIM); //Uncomment for timeout control
-        vTaskNotifyGiveFromISR(mk_ctrl->mk_notify, &xHigherPriorityTaskWoken);
-        LL_EXTI_ClearFlag_0_31(MOTOR_CORD_EXTI_LINE);
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-}
 
 /*
  * Robot operating timer
@@ -439,7 +460,8 @@ void TIM7_IRQHandler(void)
         if (LL_TIM_IsActiveFlag_UPDATE(MOTOR_OPERATING_TIM)) {
                 LL_TIM_ClearFlag_UPDATE(MOTOR_OPERATING_TIM);
                 seconds_from_start++;
-                if (seconds_from_start >= MOTOR_OPERATING_TIME) {
+                if (seconds_from_start >= MOTOR_OPERATING_TIME &&
+                    mk_ctrl->session != ROBOT_SESSION_DEBUG) {
                         mk_set_stop_motors_ctrl(mk_ctrl);
                         mk_set_pwm(stop_motors);
                 }

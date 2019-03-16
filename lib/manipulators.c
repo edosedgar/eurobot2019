@@ -250,12 +250,10 @@ int cmd_set_pump_ground(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0330, 200);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0170, 100);
-        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x034B, 200);
-        DYN_SET_ANGLE(manip_ctrl, 3, 0x02, 0x0190, 100);
-        DYN_SET_ANGLE(manip_ctrl, 4, 0x01, 0x036B, 400);
-        manip_ctrl->cmd_len = 5;
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x01d7, 200);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x023f, 100);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x01ab, 200);
+        manip_ctrl->cmd_len = 3;
         /*
          * Notify manipulators manager
          */
@@ -317,14 +315,12 @@ int cmd_set_pump_platform(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0206, 500);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0257, 100);
-        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x01ab, 100);
-        DYN_SET_ANGLE(manip_ctrl, 3, 0x02, 0x0220, 200);
-        DYN_SET_ANGLE(manip_ctrl, 4, 0x01, 0x0165, 200);
-        DYN_SET_ANGLE(manip_ctrl, 5, 0x02, 0x0200, 200);
-        DYN_SET_ANGLE(manip_ctrl, 6, 0x01, 0x014f, 200);
-        manip_ctrl->cmd_len = 7;
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0369, 500);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01e0, 100);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x03ba, 100);
+        DYN_SET_ANGLE(manip_ctrl, 3, 0x02, 0x01f8, 200);
+        DYN_SET_ANGLE(manip_ctrl, 4, 0x01, 0x03e1, 200);
+        manip_ctrl->cmd_len = 5;
         /*
          * Notify manipulators manager
          */
@@ -354,7 +350,7 @@ int cmd_release_grabber(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x00df, 100);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x0104, 100);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -385,7 +381,7 @@ int cmd_prop_pack(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x01b8, 200);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x01de, 200);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -416,7 +412,7 @@ int cmd_grab_pack(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x026c, 700);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x0258, 700);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -434,6 +430,34 @@ error_grab_pack:
         return 3;
 }
 
+int cmd_grabber_throw(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_grabber_throw;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x327, 500);
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_grabber_throw:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
 /*
  * Releaser set to default position
  */
@@ -447,7 +471,7 @@ int cmd_releaser_default(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x01A8, 300);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x0183, 300);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -478,10 +502,8 @@ int cmd_releaser_throw(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x032f, 300);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x04, 0x030f, 200);
-        DYN_SET_ANGLE(manip_ctrl, 2, 0x04, 0x032f, 100);
-        manip_ctrl->cmd_len = 3;
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x0235, 300);
+        manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
          */
