@@ -59,6 +59,12 @@
 #define MOTOR_CORD_PIN                      LL_GPIO_PIN_3
 
 /*
+ * Side switcher
+ */
+#define MOTOR_SIDE_SW_PORT                  GPIOD
+#define MOTOR_SIDE_SW_PIN                   LL_GPIO_PIN_7
+
+/*
  * Odometry pinout
  * Encoder pins
  */

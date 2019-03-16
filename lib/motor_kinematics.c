@@ -227,6 +227,12 @@ static void mk_hw_config()
         LL_GPIO_SetPinMode(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_MODE_INPUT);
         LL_GPIO_SetPinPull(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_PULL_NO);
 
+        /* Setting side switcher pin */
+        LL_GPIO_SetPinMode(MOTOR_SIDE_SW_PORT, MOTOR_SIDE_SW_PIN,
+                           LL_GPIO_MODE_INPUT);
+        LL_GPIO_SetPinPull(MOTOR_SIDE_SW_PORT, MOTOR_SIDE_SW_PIN,
+                           LL_GPIO_PULL_NO);
+
         /* Setting robot operating timer */
         LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
         LL_TIM_SetCounterMode(MOTOR_OPERATING_TIM, LL_TIM_COUNTERMODE_UP);
@@ -272,6 +278,12 @@ static uint8_t read_cord_status(void)
         return (uint8_t) LL_GPIO_IsInputPinSet(MOTOR_CORD_PORT, MOTOR_CORD_PIN);
 }
 
+static uint8_t read_side_switch(void)
+{
+        return (uint8_t) LL_GPIO_IsInputPinSet(MOTOR_SIDE_SW_PORT,
+                                               MOTOR_SIDE_SW_PIN);
+}
+
 /*
  * End of section with helper functions
  */
@@ -294,6 +306,7 @@ void motor_kinematics(void *arg)
                 .status = 0x00,
                 .session = ROBOT_SESSION_COMPETITION,
                 .cord_status = 0,
+                .side = ROBOT_SIDE_RIGHT,
                 .vel_x = 0.0f,
                 .vel_y = 0.0f,
                 .wz = 0.0f,
@@ -378,6 +391,16 @@ int cmd_read_cord_status(void *args)
                 xTaskNotifyGive(mk_ctrl->mk_notify);
         }
         memcpy(args, &mk_ctrl->cord_status, 1);
+        return 1;
+}
+
+/*
+ * Command for reading current side switcher state. 0 - right, 1 - left
+ */
+int cmd_read_side_switch(void *args)
+{
+        mk_ctrl->side = read_side_switch();
+        memcpy(args, &mk_ctrl->side, 1);
         return 1;
 }
 
