@@ -59,10 +59,10 @@ static void step_hw_config(void)
 static void step_reg_motor(uint8_t id, GPIO_TypeDef *GPIOx, uint32_t pin1,
                            uint32_t pin2, uint32_t pin3, uint32_t pin4) {
         step_ctrl[id].step_port = GPIOx;
-        step_ctrl[id].step_state_pins[3] = pin4 | pin1;
-        step_ctrl[id].step_state_pins[2] = pin2 | pin4;
-        step_ctrl[id].step_state_pins[1] = pin2 | pin3;
-        step_ctrl[id].step_state_pins[0] = pin1 | pin3;
+        step_ctrl[id].step_state_pins[0] = pin4 | pin1;
+        step_ctrl[id].step_state_pins[1] = pin2 | pin4;
+        step_ctrl[id].step_state_pins[2] = pin2 | pin3;
+        step_ctrl[id].step_state_pins[3] = pin1 | pin3;
         step_ctrl[id].step_mask = pin1 | pin2 | pin3 | pin4;
         return;
 }
