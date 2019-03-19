@@ -521,6 +521,102 @@ error_releaser_throw:
 }
 
 /*
+ * Set angle to push plunium pack
+ */
+int cmd_push_plunium(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_push_plunium;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02bd, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01fa, 200);
+        manip_ctrl->cmd_len = 2;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_push_plunium:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Set angle to take goldenium pack
+ */
+int cmd_take_goldenium(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_take_goldenium;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x030b, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0267, 200);
+        manip_ctrl->cmd_len = 2;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_take_goldenium:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Lift up goldenium pack
+ */
+int cmd_lift_goldenium(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_lift_goldenium;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0392, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x020b, 200);
+        manip_ctrl->cmd_len = 2;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_lift_goldenium:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
  * Start pumping
  */
 int cmd_start_pump(char *args)
