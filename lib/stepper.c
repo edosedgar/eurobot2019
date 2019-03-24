@@ -32,9 +32,11 @@ static void step_hw_config(void)
         /*
          * Hardware initialization for limit switch
          */
-        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
         LL_GPIO_SetPinMode(STEP_LIMIT_SWITCH_PORT, STEP_LIMIT_SWITCH_PIN,
                            LL_GPIO_MODE_INPUT);
+        LL_GPIO_SetPinPull(STEP_LIMIT_SWITCH_PORT, STEP_LIMIT_SWITCH_PIN,
+                           LL_GPIO_PULL_NO);
         /*
          * Timer initialization for all step motors control
          */
@@ -57,10 +59,10 @@ static void step_hw_config(void)
 static void step_reg_motor(uint8_t id, GPIO_TypeDef *GPIOx, uint32_t pin1,
                            uint32_t pin2, uint32_t pin3, uint32_t pin4) {
         step_ctrl[id].step_port = GPIOx;
-        step_ctrl[id].step_state_pins[0] = pin1 | pin3;
-        step_ctrl[id].step_state_pins[1] = pin2 | pin3;
-        step_ctrl[id].step_state_pins[2] = pin2 | pin4;
-        step_ctrl[id].step_state_pins[3] = pin4 | pin1;
+        step_ctrl[id].step_state_pins[0] = pin4 | pin1;
+        step_ctrl[id].step_state_pins[1] = pin2 | pin4;
+        step_ctrl[id].step_state_pins[2] = pin2 | pin3;
+        step_ctrl[id].step_state_pins[3] = pin1 | pin3;
         step_ctrl[id].step_mask = pin1 | pin2 | pin3 | pin4;
         return;
 }
@@ -106,7 +108,7 @@ static void step_stop(uint8_t id)
  */
 static uint32_t step_is_reached_limit(uint8_t id)
 {
-        return LL_GPIO_IsInputPinSet(step_ctrl[id].limit_swtch_port,
+        return !LL_GPIO_IsInputPinSet(step_ctrl[id].limit_swtch_port,
                                      step_ctrl[id].limit_swtch_pin);
 }
 
@@ -133,7 +135,7 @@ void step_init(void)
         for (i = 0; i < NUMBER_OF_STEP_MOTORS; i++) {
                 step_ctrl[i].current_tick = 0;
                 step_ctrl[i].goal_step = 0;
-                step_set_speed(i, REV_PER_SEC_10);
+                step_set_speed(i, REV_PER_SEC_1);
                 step_clr_flag(step_ctrl[i], STEP_RUNNING);
                 step_clr_flag(step_ctrl[i], STEP_CALIBRATED);
                 step_clr_flag(step_ctrl[i], STEP_START_CALIBRATION);
@@ -158,6 +160,13 @@ int step_is_calibrated(uint8_t id)
         return is_step_flag_set(step_ctrl[id], STEP_CALIBRATED);
 }
 
+int step_is_running(uint8_t id)
+{
+        if (!IS_VALID_ID(id))
+                return -1;
+       return is_step_flag_set(step_ctrl[id], STEP_RUNNING);
+}
+
 int step_set_speed(uint8_t id, step_speed_t rev_per_sec)
 {
         if (!IS_VALID_ID(id))
@@ -167,11 +176,11 @@ int step_set_speed(uint8_t id, step_speed_t rev_per_sec)
         return 0;
 }
 
-int step_set_step_goal(uint8_t id, int goal_step)
+int step_set_step_goal(uint8_t id, uint32_t goal_step)
 {
         if (!IS_VALID_ID(id))
                 return -1;
-        if (abs(goal_step - step_ctrl[id].current_step > MAX_STEPS))
+        if (goal_step > MAX_STEPS)
                 return -1;
         if (is_step_flag_set(step_ctrl[id], STEP_RUNNING) ||
             !is_step_flag_set(step_ctrl[id], STEP_CALIBRATED))
@@ -179,6 +188,11 @@ int step_set_step_goal(uint8_t id, int goal_step)
         step_ctrl[id].goal_step = goal_step;
         LL_TIM_EnableCounter(STEP_TIM);
         return 0;
+}
+
+uint32_t step_get_current_step(uint8_t id)
+{
+        return step_ctrl[id].current_step;
 }
 
 /*

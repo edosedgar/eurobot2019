@@ -168,13 +168,71 @@ int cmd_step_calibrate(char *args)
  */
 int cmd_step_set_step(char *args)
 {
+        uint32_t *step_goal = (uint32_t *) args;
+
         if (!step_is_calibrated(0))
                 goto error_step_set_step;
-        if (step_set_step_goal(0, 10000))
+        if (step_set_step_goal(0, *step_goal))
                 goto error_step_set_step;
         memcpy(args, "OK", 3);
         return 3;
 error_step_set_step:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Make step down for one pack
+ */
+int cmd_step_down(char *args)
+{
+        uint32_t cur_step = 0;
+        uint32_t goal_step = 0;
+
+        if (!step_is_calibrated(0))
+                goto error_step_down;
+        cur_step = step_get_current_step(0);
+        goal_step = cur_step + PACK_SIZE_IN_STEPS;
+        if (step_set_step_goal(0, goal_step))
+                goto error_step_down;
+        memcpy(args, "OK", 3);
+        return 3;
+error_step_down:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Make step up for one pack
+ */
+int cmd_step_up(char *args)
+{
+        uint32_t cur_step = 0;
+        uint32_t goal_step = 0;
+
+        if (!step_is_calibrated(0))
+                goto error_step_up;
+        cur_step = step_get_current_step(0);
+        goal_step = cur_step - PACK_SIZE_IN_STEPS;
+        if (step_set_step_goal(0, goal_step))
+                goto error_step_up;
+        memcpy(args, "OK", 3);
+        return 3;
+error_step_up:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+* Retern running state
+*/
+int cmd_step_is_running(char *args)
+{
+        if (step_is_running(0))
+                goto error_step_is_running;
+        memcpy(args, "OK", 3);
+        return 3;
+error_step_is_running:
         memcpy(args, "ER", 3);
         return 3;
 }
@@ -192,9 +250,9 @@ int cmd_set_pump_ground(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0330, 50);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0190, 50);
-        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x036B, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x01d7, 200);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x023f, 100);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x01ab, 200);
         manip_ctrl->cmd_len = 3;
         /*
          * Notify manipulators manager
@@ -225,8 +283,8 @@ int cmd_set_pump_wall(char *args)
          /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0262, 50);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01C8, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02B2, 10);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0238, 200);
         manip_ctrl->cmd_len = 2;
         /*
          * Notify manipulators manager
@@ -257,9 +315,12 @@ int cmd_set_pump_platform(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0159, 50);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0200, 50);
-        manip_ctrl->cmd_len = 2;
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0369, 500);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01e0, 100);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x03ba, 100);
+        DYN_SET_ANGLE(manip_ctrl, 3, 0x02, 0x01f8, 200);
+        DYN_SET_ANGLE(manip_ctrl, 4, 0x01, 0x03e1, 200);
+        manip_ctrl->cmd_len = 5;
         /*
          * Notify manipulators manager
          */
@@ -289,7 +350,7 @@ int cmd_release_grabber(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x0184, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x0104, 100);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -320,7 +381,7 @@ int cmd_prop_pack(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x023E, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x01de, 200);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -351,7 +412,7 @@ int cmd_grab_pack(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x02EB, 50);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x0258, 700);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -365,6 +426,192 @@ int cmd_grab_pack(char *args)
         return 3;
 
 error_grab_pack:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+int cmd_grabber_throw(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_grabber_throw;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x327, 500);
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_grabber_throw:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Releaser set to default position
+ */
+int cmd_releaser_default(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_releaser_default;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x0183, 300);
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_releaser_default:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Releaser throw pack
+ */
+int cmd_releaser_throw(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_releaser_throw;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x0235, 300);
+        manip_ctrl->cmd_len = 1;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_releaser_throw:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Set angle to push plunium pack
+ */
+int cmd_push_plunium(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_push_plunium;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02bd, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01fa, 200);
+        manip_ctrl->cmd_len = 2;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_push_plunium:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Set angle to take goldenium pack
+ */
+int cmd_take_goldenium(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_take_goldenium;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x030b, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0267, 200);
+        manip_ctrl->cmd_len = 2;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_take_goldenium:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Lift up goldenium pack
+ */
+int cmd_lift_goldenium(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+                goto error_lift_goldenium;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x0392, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x020b, 200);
+        manip_ctrl->cmd_len = 2;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_lift_goldenium:
         memcpy(args, "ER", 3);
         return 3;
 }
@@ -393,7 +640,7 @@ error_start_pump:
         return 3;
 }
 
- /*
+/*
  * Stop pumping
  */
 int cmd_stop_pump(char *args)

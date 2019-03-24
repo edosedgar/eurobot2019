@@ -6,6 +6,15 @@
 #include "semphr.h"
 
 /*
+ * Robot's movement time allowed in seconds
+ */
+#define MOTOR_OPERATING_TIME           99
+#define ROBOT_SESSION_COMPETITION       0
+#define ROBOT_SESSION_DEBUG             1
+#define ROBOT_SIDE_RIGHT                0
+#define ROBOT_SIDE_LEFT                 1
+
+/*
  * SET_PWM command args structure
  */
 typedef struct {
@@ -43,8 +52,14 @@ enum mk_flags {
         ENUM_FLAG(MK_STOP_MOTORS)
 };
 
+#define is_manip_flag_set(manip_ctrl, bit) \
+        (manip_ctrl->flags & bit)
+
 typedef struct {
         int status;
+        uint8_t session;
+        uint8_t cord_status;
+        uint8_t side;
         float vel_x;
         float vel_y;
         float wz;
@@ -71,13 +86,13 @@ StaticSemaphore_t mutex_buffer;
 #define MK_MAX_ROT_SPEED 22.4399f
 #define MK_LIN_KIN_MATRIX \
         -32.0750f,    18.5158f,    0.0f, \
-        0.0f,         37.0370f,    0.0f, \
+        0.0f,         -37.0370f,   0.0f, \
         32.0750f,     18.5158f,    0.0f
 
 #define MK_ROT_KIN_MATRIX \
-        0.0f,   0.0f,    3.67f,  \
-        0.0f,   0.0f,   -3.67f,  \
-        0.0f,   0.0f,    3.67f
+        0.0f,   0.0f,    4.69f,  \
+        0.0f,   0.0f,    4.69f,  \
+        0.0f,   0.0f,    4.69f
 
 #define MK_SPEED2PWM_A \
         0.03565f, \
