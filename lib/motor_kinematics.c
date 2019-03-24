@@ -111,21 +111,21 @@ static void mk_speed2pwm(motors_ctrl_t *mk_ctrl)
 static void mk_set_pwm(float *pwm_values)
 {
         if (pwm_values[0] > 0.0f)
-                LL_GPIO_SetOutputPin(MOTOR_CH1_DIR_PORT,MOTOR_CH1_DIR_PIN);
+                LL_GPIO_SetOutputPin(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN);
         else
                 LL_GPIO_ResetOutputPin(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN);
         LL_TIM_OC_SetCompareCH1(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[0]) *
                                 MOTOR_PWM_TIM_ARR));
 
         if (pwm_values[1] > 0.0f)
-                LL_GPIO_SetOutputPin(MOTOR_CH2_DIR_PORT,MOTOR_CH2_DIR_PIN);
+                LL_GPIO_SetOutputPin(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN);
         else
                 LL_GPIO_ResetOutputPin(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN);
         LL_TIM_OC_SetCompareCH2(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[1]) *
                                 MOTOR_PWM_TIM_ARR));
 
         if (pwm_values[2] > 0.0f)
-                LL_GPIO_SetOutputPin(MOTOR_CH3_DIR_PORT,MOTOR_CH3_DIR_PIN);
+                LL_GPIO_SetOutputPin(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN);
         else
                 LL_GPIO_ResetOutputPin(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN);
         LL_TIM_OC_SetCompareCH3(MOTOR_TIM, (uint32_t)(fabsf(pwm_values[2]) *
@@ -221,22 +221,69 @@ static void mk_hw_config()
         /* Enable timer */
         LL_TIM_GenerateEvent_UPDATE(MOTOR_TIM);
         LL_TIM_EnableCounter(MOTOR_TIM);
+
+        /* Setting cord pin */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
+        LL_GPIO_SetPinMode(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_MODE_INPUT);
+        LL_GPIO_SetPinPull(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_PULL_NO);
+
+        /* Setting side switcher pin */
+        LL_GPIO_SetPinMode(MOTOR_SIDE_SW_PORT, MOTOR_SIDE_SW_PIN,
+                           LL_GPIO_MODE_INPUT);
+        LL_GPIO_SetPinPull(MOTOR_SIDE_SW_PORT, MOTOR_SIDE_SW_PIN,
+                           LL_GPIO_PULL_NO);
+
+        /* Setting robot operating timer */
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM7);
+        LL_TIM_SetCounterMode(MOTOR_OPERATING_TIM, LL_TIM_COUNTERMODE_UP);
+        LL_TIM_SetAutoReload(MOTOR_OPERATING_TIM, MOTOR_OPERATING_TIM_ARR);
+        LL_TIM_SetPrescaler(MOTOR_OPERATING_TIM, MOTOR_OPERATING_TIM_PSC);
+        LL_TIM_EnableIT_UPDATE(MOTOR_OPERATING_TIM);
+
+        /* Setting robot operating timer interrupt */
+        NVIC_SetPriority(MOTOR_OPERATING_TIM_IRQN,
+                         MOTOR_OPERATING_TIM_IRQN_PRIORITY);
+        NVIC_EnableIRQ(MOTOR_OPERATING_TIM_IRQN);
         return;
 }
 
 static void mk_set_pwm_ctrl(motors_ctrl_t *mk_ctrl)
 {
-        mk_ctrl->status |= MK_PWM_CONTROL_BIT;
-        mk_ctrl->status &= ~MK_SPEED_CONTROL_BIT;
+        mk_ctrl->status |= MK_PWM_CONTROL;
+        mk_ctrl->status &= ~MK_SPEED_CONTROL;
         return;
 }
 
 static void mk_set_speed_ctrl(motors_ctrl_t *mk_ctrl)
 {
-        mk_ctrl->status |= MK_SPEED_CONTROL_BIT;
-        mk_ctrl->status &= ~MK_PWM_CONTROL_BIT;
+        mk_ctrl->status |= MK_SPEED_CONTROL;
+        mk_ctrl->status &= ~MK_PWM_CONTROL;
         return;
 }
+
+static void mk_set_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
+{
+        mk_ctrl->status |= MK_STOP_MOTORS;
+        return;
+}
+
+static void mk_clr_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
+{
+        mk_ctrl->status &= ~(MK_STOP_MOTORS);
+        return;
+}
+
+static uint8_t read_cord_status(void)
+{
+        return (uint8_t) LL_GPIO_IsInputPinSet(MOTOR_CORD_PORT, MOTOR_CORD_PIN);
+}
+
+static uint8_t read_side_switch(void)
+{
+        return (uint8_t) LL_GPIO_IsInputPinSet(MOTOR_SIDE_SW_PORT,
+                                               MOTOR_SIDE_SW_PIN);
+}
+
 /*
  * End of section with helper functions
  */
@@ -257,6 +304,9 @@ void motor_kinematics(void *arg)
          */
         motors_ctrl_t mk_ctrl_st = {
                 .status = 0x00,
+                .session = ROBOT_SESSION_COMPETITION,
+                .cord_status = 0,
+                .side = ROBOT_SIDE_RIGHT,
                 .vel_x = 0.0f,
                 .vel_y = 0.0f,
                 .wz = 0.0f,
@@ -268,13 +318,18 @@ void motor_kinematics(void *arg)
         mk_ctrl_st.mk_notify = xTaskGetCurrentTaskHandle();
         mk_ctrl = &mk_ctrl_st;
 
+        /*
+         * Stop motors and wait for starting cord
+         */
+        mk_set_stop_motors_ctrl(mk_ctrl);
+
         while (1) {
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
                 /*
                  * If one stopped motors immediately reset all pwm values
                  */
-                if (mk_ctrl->status & MK_STOP_MOTORS_BIT) {
+                if (mk_ctrl->status & MK_STOP_MOTORS) {
                         mk_ctrl->pwm_motors[0] = 0.1f;
                         mk_ctrl->pwm_motors[1] = 0.1f;
                         mk_ctrl->pwm_motors[2] = 0.1f;
@@ -284,8 +339,8 @@ void motor_kinematics(void *arg)
                  * was switched to speed mode call mk_speed2pwm to calculate
                  * matrix kinematics
                  */
-                if (mk_ctrl->status & MK_SPEED_CONTROL_BIT &&
-                    !(mk_ctrl->status & MK_STOP_MOTORS_BIT)) {
+                if (mk_ctrl->status & MK_SPEED_CONTROL &&
+                    !(mk_ctrl->status & MK_STOP_MOTORS)) {
                         mk_speed2pwm(mk_ctrl);
                 }
                 /*
@@ -301,6 +356,53 @@ void motor_kinematics(void *arg)
 /*
  * Set of motor related handlers for terminal
  */
+
+/*
+ * Command for setting debug session. In debug session ignore starting cord
+ * and robot operating timer
+ */
+int cmd_set_robot_session(void *args)
+{
+        /*
+         * Check whether kinematics ready or not
+         */
+        if (!mk_ctrl)
+                goto error_set_robot_session;
+
+        mk_ctrl->session = ROBOT_SESSION_DEBUG;
+        mk_clr_stop_motors_ctrl(mk_ctrl);
+        memcpy(args, "OK", 3);
+        return 3;
+error_set_robot_session:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Command for reading starting cord status. After cord disattached, start robot
+ * operating timer.
+ */
+int cmd_read_cord_status(void *args)
+{
+        mk_ctrl->cord_status = read_cord_status();
+        if (mk_ctrl->cord_status == 1) {
+                mk_clr_stop_motors_ctrl(mk_ctrl);
+                LL_TIM_EnableCounter(MOTOR_OPERATING_TIM);
+                xTaskNotifyGive(mk_ctrl->mk_notify);
+        }
+        memcpy(args, &mk_ctrl->cord_status, 1);
+        return 1;
+}
+
+/*
+ * Command for reading current side switcher state. 0 - right, 1 - left
+ */
+int cmd_read_side_switch(void *args)
+{
+        mk_ctrl->side = read_side_switch();
+        memcpy(args, &mk_ctrl->side, 1);
+        return 1;
+}
 
 /*
  * Set motors pwm command
@@ -366,4 +468,26 @@ int cmd_set_speed(void *args)
 error_set_speed:
         memcpy(args, "ER", 3);
         return 3;
+}
+
+
+/*
+ * Robot operating timer
+ */
+void TIM7_IRQHandler(void)
+{
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        static uint32_t seconds_from_start = 0;
+        static float stop_motors[] = {0.0f, 0.0f, 0.0f};
+
+        if (LL_TIM_IsActiveFlag_UPDATE(MOTOR_OPERATING_TIM)) {
+                LL_TIM_ClearFlag_UPDATE(MOTOR_OPERATING_TIM);
+                seconds_from_start++;
+                if (seconds_from_start >= MOTOR_OPERATING_TIME &&
+                    mk_ctrl->session != ROBOT_SESSION_DEBUG) {
+                        mk_set_stop_motors_ctrl(mk_ctrl);
+                        mk_set_pwm(stop_motors);
+                }
+        }
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

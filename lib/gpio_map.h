@@ -53,6 +53,18 @@
 #define MOTOR_CH4_DIR_PIN                   LL_GPIO_PIN_14
 
 /*
+ * Starting cord pinout
+ */
+#define MOTOR_CORD_PORT                     GPIOD
+#define MOTOR_CORD_PIN                      LL_GPIO_PIN_3
+
+/*
+ * Side switcher
+ */
+#define MOTOR_SIDE_SW_PORT                  GPIOD
+#define MOTOR_SIDE_SW_PIN                   LL_GPIO_PIN_7
+
+/*
  * Odometry pinout
  * Encoder pins
  */
@@ -86,7 +98,7 @@
 /*
  * Limit switch pin for step motor calibration
  */
-#define STEP_LIMIT_SWITCH_PORT             GPIOA // TODO CHANGE!!!
+#define STEP_LIMIT_SWITCH_PORT             GPIOD
 #define STEP_LIMIT_SWITCH_PIN              LL_GPIO_PIN_0
 
 #endif

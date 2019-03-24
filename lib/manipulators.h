@@ -49,7 +49,7 @@ StaticTask_t manipulators_tb;
  */
 typedef struct {
         uint8_t cmd_buff[10];
-        uint8_t delay_ms;
+        uint32_t delay_ms;
 } dyn_cmd_t;
 
 /*
