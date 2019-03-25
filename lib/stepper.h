@@ -7,7 +7,9 @@
 #include "dev_map.h"
 
 #define STEPS_PER_REVOLUTION        200
-#define MAX_STEPS                   100000 // TODO change
+#define PACK_SIZE_IN_STEPS          630
+#define NUMBER_OF_PACKS             8
+#define MAX_STEPS                   NUMBER_OF_PACKS * PACK_SIZE_IN_STEPS
 
 #define IS_VALID_ID(id)             ((id) < NUMBER_OF_STEP_MOTORS)
 
@@ -35,20 +37,19 @@
  * Type for step motor speed
  */
 typedef enum {
-        REV_PER_SEC_10 =   0x01,
-        REV_PER_SEC_5 =    0x02,
-        REV_PER_SEC_2_5 =  0x04,
-        REV_PER_SEC_1_75 = 0x08
+        REV_PER_SEC_1 =    0x01,
+        REV_PER_SEC_0_5 =  0x02,
+        REV_PER_SEC_0_25 = 0x04
 } step_speed_t;
 
 /*
  * Control structure for stepper motor
  */
 typedef struct {
-        int current_tick;
-        int step_delay_ticks;
-        int current_step;
-        int goal_step;
+        uint32_t current_tick;
+        uint32_t step_delay_ticks;
+        uint32_t current_step;
+        uint32_t goal_step;
         GPIO_TypeDef *step_port;
         uint32_t step_state_pins[4];
         uint32_t step_mask;
@@ -60,7 +61,9 @@ typedef struct {
 void step_init(void);
 int step_start_calibration(uint8_t id);
 int step_is_calibrated(uint8_t id);
+int step_is_running(uint8_t id);
 int step_set_speed(uint8_t id, step_speed_t rev_per_sec);
-int step_set_step_goal(uint8_t id, int goal_step);
+int step_set_step_goal(uint8_t id, uint32_t goal_step);
+uint32_t step_get_current_step(uint8_t id);
 
 #endif //_STEPPER_H_

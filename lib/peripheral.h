@@ -7,6 +7,8 @@
 #include "stm32f4xx_ll_usart.h"
 #include "stm32f4xx_ll_dma.h"
 #include "stm32f4xx_ll_tim.h"
+#include "stm32f4xx_ll_system.h"
+#include "stm32f4xx_ll_exti.h"
 
 /*
  * Clock configuration parameters
@@ -80,11 +82,11 @@
 
 /*
  * Srtepper motor timer
- * APB1_CLK = 42000000, T = 500 mcs
+ * APB1_CLK = 42000000, T = 5 ms
  */
 #define STEP_TIM                                TIM5
 #define STEP_TIM_MODE                           LL_TIM_COUNTERMODE_UP
-#define STEP_TIM_ARR                            1000
+#define STEP_TIM_ARR                            500
 #define STEP_TIM_PSC                            419
 #define STEP_TIM_IRQN                           TIM5_IRQn
 #define STEP_TIM_IRQN_PRIORITY                  1
@@ -122,5 +124,15 @@
 #define ODOMETRY_IRQN_PRIORITY                  (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 2)
 #define ODOMETRY_TIM_ARR                        42000
 #define ODOMETRY_TIM_PSC                        20
+
+/*
+ * Robot operating timer
+ * APB1_CLK = 64000000, TIM_PCS = 41999, TIM_ARR = 2000, freq = 1Hz
+ */
+#define MOTOR_OPERATING_TIM                     TIM7
+#define MOTOR_OPERATING_TIM_PSC                 41999
+#define MOTOR_OPERATING_TIM_ARR                 2000
+#define MOTOR_OPERATING_TIM_IRQN                TIM7_IRQn
+#define MOTOR_OPERATING_TIM_IRQN_PRIORITY       (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
 
 #endif
