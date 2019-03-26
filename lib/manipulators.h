@@ -56,7 +56,6 @@ typedef struct {
  * Manipulators control structure defenition
  */
 typedef struct {
-        uint8_t *stm_dr_buff;
         dyn_cmd_t dyn_cmd[MAX_COMMANDS];
         uint8_t cmd_len;
         uint8_t flags;
