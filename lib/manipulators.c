@@ -45,81 +45,6 @@ static void manip_hw_config(void)
                            LL_GPIO_PULL_NO);
 }
 
-static void stm_driver_hw_config(manip_ctrl_t *manip_ctrl)
-{
-         /* Init terminal pins */
-        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
-
-        LL_GPIO_SetPinMode(STM_DRIVER_USART_TX_PORT, STM_DRIVER_USART_TX_PIN,
-                           LL_GPIO_MODE_ALTERNATE);
-        LL_GPIO_SetAFPin_8_15(STM_DRIVER_USART_TX_PORT, STM_DRIVER_USART_TX_PIN,
-                             STM_DRIVER_USART_PIN_AF);
-        LL_GPIO_SetPinOutputType(STM_DRIVER_USART_TX_PORT,
-                                 STM_DRIVER_USART_TX_PIN,
-                                 LL_GPIO_OUTPUT_PUSHPULL);
-        LL_GPIO_SetPinPull(STM_DRIVER_USART_TX_PORT, STM_DRIVER_USART_TX_PIN,
-                           LL_GPIO_PULL_UP);
-        LL_GPIO_SetPinSpeed(STM_DRIVER_USART_TX_PORT, STM_DRIVER_USART_TX_PIN,
-                            LL_GPIO_SPEED_FREQ_HIGH);
-
-        LL_GPIO_SetPinMode(STM_DRIVER_USART_RX_PORT, STM_DRIVER_USART_RX_PIN,
-                           LL_GPIO_MODE_ALTERNATE);
-        LL_GPIO_SetAFPin_8_15(STM_DRIVER_USART_RX_PORT, STM_DRIVER_USART_RX_PIN,
-                             STM_DRIVER_USART_PIN_AF);
-        LL_GPIO_SetPinOutputType(STM_DRIVER_USART_RX_PORT,
-                                 STM_DRIVER_USART_RX_PIN,
-                                 LL_GPIO_OUTPUT_PUSHPULL);
-        LL_GPIO_SetPinPull(STM_DRIVER_USART_RX_PORT, STM_DRIVER_USART_RX_PIN,
-                           LL_GPIO_PULL_UP);
-        LL_GPIO_SetPinSpeed(STM_DRIVER_USART_RX_PORT, STM_DRIVER_USART_RX_PIN,
-                            LL_GPIO_SPEED_FREQ_HIGH);
-
-        /* Enable clocking on USART and DMA */
-        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
-        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART3);
-
-        /* UART configuration */
-        LL_USART_SetTransferDirection(STM_DRIVER_USART,
-                                      LL_USART_DIRECTION_TX_RX);
-        LL_USART_SetParity(STM_DRIVER_USART, LL_USART_PARITY_NONE);
-        LL_USART_SetDataWidth(STM_DRIVER_USART, LL_USART_DATAWIDTH_8B);
-        LL_USART_SetStopBitsLength(STM_DRIVER_USART, LL_USART_STOPBITS_1);
-        LL_USART_SetHWFlowCtrl(STM_DRIVER_USART, LL_USART_HWCONTROL_NONE);
-        LL_USART_SetBaudRate(STM_DRIVER_USART,
-                             SystemCoreClock/STM_DRIVER_USART_PERIPH_PRESCALER,
-                             LL_USART_OVERSAMPLING_16,
-                             STM_DRIVER_USART_BAUDRATE);
-        LL_USART_EnableDirectionRx(STM_DRIVER_USART);
-        LL_USART_EnableDirectionTx(STM_DRIVER_USART);
-        LL_USART_EnableDMAReq_RX(STM_DRIVER_USART);
-        LL_USART_EnableIT_IDLE(STM_DRIVER_USART);
-        LL_USART_Enable(STM_DRIVER_USART);
-
-        NVIC_SetPriority(STM_DRIVER_USART_IRQN, STM_DRIVER_USART_IRQN_PRIORITY);
-        NVIC_EnableIRQ(STM_DRIVER_USART_IRQN);
-
-        /* DMA configuration */
-        LL_DMA_SetChannelSelection(STM_DRIVER_DMA, STM_DRIVER_DMA_STREAM,
-                                   STM_DRIVER_DMA_CHANNEL);
-        LL_DMA_ConfigAddresses(STM_DRIVER_DMA, STM_DRIVER_DMA_STREAM,
-                               STM_DRIVER_DMA_SRC_ADDR, 
-                               (uint32_t)manip_ctrl->stm_dr_buff,
-                               STM_DRIVER_DMA_DIRECTION);
-        LL_DMA_SetDataLength(STM_DRIVER_DMA, STM_DRIVER_DMA_STREAM,
-                             STM_DRIVER_DMA_BUFFER_SIZE);
-        LL_DMA_SetMemoryIncMode(STM_DRIVER_DMA, STM_DRIVER_DMA_STREAM,
-                                STM_DRIVER_DMA_MEM_INC_MODE);
-
-        LL_DMA_EnableStream(STM_DRIVER_DMA, STM_DRIVER_DMA_STREAM);
-        LL_DMA_EnableIT_TC(STM_DRIVER_DMA, STM_DRIVER_DMA_STREAM);
-
-        /* Enable global DMA stream interrupts */
-        NVIC_SetPriority(STM_DRIVER_DMA_STREAM_IRQN,
-                         STM_DRIVER_DMA_STREAM_IRQN_PRIORITY);
-        NVIC_EnableIRQ(STM_DRIVER_DMA_STREAM_IRQN);
-        return;
-}
-
 void manipulators_manager(void *arg)
 {
         (void) arg;
@@ -127,7 +52,6 @@ void manipulators_manager(void *arg)
         int i = 0;
 
         manip_ctrl_st.manip_notify = xTaskGetCurrentTaskHandle();
-        manip_ctrl_st.stm_dr_buff = malloc(STM_DRIVER_BUF_SIZE);
         manip_ctrl_st.flags = 0x00;
         for (i = 0;i < MAX_COMMANDS; i++) {
                 memset(manip_ctrl_st.dyn_cmd[i].cmd_buff, 0, 10);
@@ -135,7 +59,6 @@ void manipulators_manager(void *arg)
         }
         manip_ctrl = &manip_ctrl_st;
         manip_hw_config();
-        stm_driver_hw_config(&manip_ctrl_st);
         step_init();
         while (1) {
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
@@ -662,30 +585,4 @@ int cmd_stop_pump(char *args)
 error_stop_pump:
         memcpy(args, "ER", 3);
         return 3;
-}
-
-/*
- * Hardware interrupts
- */
-void USART3_IRQHandler(void)
-{
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-        LL_USART_ClearFlag_IDLE(STM_DRIVER_USART);
-        LL_DMA_DisableStream(STM_DRIVER_DMA, STM_DRIVER_DMA_STREAM);
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-}
-
-void DMA1_Stream1_IRQHandler(void)
-{
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-        if (LL_DMA_IsActiveFlag_TC1(STM_DRIVER_DMA)) {
-                LL_DMA_ClearFlag_TC1(STM_DRIVER_DMA);
-                LL_DMA_ClearFlag_HT1(STM_DRIVER_DMA);
-                LL_DMA_EnableStream(STM_DRIVER_DMA, STM_DRIVER_DMA_STREAM);
-                vTaskNotifyGiveFromISR(manip_ctrl->manip_notify,
-                                       &xHigherPriorityTaskWoken);
-        }
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

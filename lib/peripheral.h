@@ -127,11 +127,11 @@
 
 /*
  * Robot operating timer
- * APB1_CLK = 64000000, TIM_PCS = 41999, TIM_ARR = 2000, freq = 1Hz
+ * APB1_CLK = 84000000, TIM_PCS = 41999, TIM_ARR = 2000, freq = 1Hz
  */
 #define MOTOR_OPERATING_TIM                     TIM7
 #define MOTOR_OPERATING_TIM_PSC                 41999
-#define MOTOR_OPERATING_TIM_ARR                 2000
+#define MOTOR_OPERATING_TIM_ARR                 1999
 #define MOTOR_OPERATING_TIM_IRQN                TIM7_IRQn
 #define MOTOR_OPERATING_TIM_IRQN_PRIORITY       (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
 
