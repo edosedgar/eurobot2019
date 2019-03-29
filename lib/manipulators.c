@@ -173,9 +173,9 @@ int cmd_set_pump_ground(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x032c, 100);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0194, 400);
-        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x036c, 300);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x032c, 0x00f9, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0194, 0x00f9, 400);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x036c, 0x00f9, 300);
         manip_ctrl->cmd_len = 3;
         /*
          * Notify manipulators manager
@@ -206,8 +206,8 @@ int cmd_set_pump_wall(char *args)
          /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02af, 50);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0229, 400);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02af, 0x00f9, 50);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0229, 0x00f9, 400);
         manip_ctrl->cmd_len = 2;
         /*
          * Notify manipulators manager
@@ -238,11 +238,11 @@ int cmd_set_pump_platform(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x01c8, 100);
-        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0248, 600);
-        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x018c, 100);
-        DYN_SET_ANGLE(manip_ctrl, 3, 0x02, 0x020d, 200);
-        DYN_SET_ANGLE(manip_ctrl, 4, 0x01, 0x015a, 200);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x01c8, 0x00f9, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0248, 0x00f9, 600);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x01, 0x018c, 0x00f9, 100);
+        DYN_SET_ANGLE(manip_ctrl, 3, 0x02, 0x020d, 0x00f9, 200);
+        DYN_SET_ANGLE(manip_ctrl, 4, 0x01, 0x015a, 0x00f9, 200);
         manip_ctrl->cmd_len = 5;
         /*
          * Notify manipulators manager
@@ -273,7 +273,7 @@ int cmd_release_grabber(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x00df, 100);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x00df, 0x0000, 100);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -304,7 +304,7 @@ int cmd_prop_pack(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x01cc, 200);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x01cc, 0x0000, 200);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -335,7 +335,7 @@ int cmd_grab_pack(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x0259, 700);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x03, 0x0259, 0x0000, 700);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -366,7 +366,7 @@ int cmd_releaser_default(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x01eb, 300);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x01eb, 0x0000, 300);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
@@ -397,7 +397,7 @@ int cmd_releaser_throw(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x02a2, 300);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x04, 0x02a2, 0x0000, 300);
         manip_ctrl->cmd_len = 1;
         /*
          * Notify manipulators manager
