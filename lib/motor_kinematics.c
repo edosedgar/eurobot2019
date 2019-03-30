@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "motor_kinematics.h"
+#include "manipulators.h"
 #include "peripheral.h"
 #include "gpio_map.h"
 
@@ -284,6 +285,22 @@ static uint8_t read_side_switch(void)
                                                MOTOR_SIDE_SW_PIN);
 }
 
+static void turn_off_all_motors(void)
+{
+        static float stop_motors[] = {0.0f, 0.0f, 0.0f};
+
+        /*
+         * Turn off maxons
+         */
+        mk_set_stop_motors_ctrl(mk_ctrl);
+        mk_set_pwm(stop_motors);
+        /*
+         * Turn off manipulators
+         */
+        manipulators_block();
+        return;
+}
+
 /*
  * End of section with helper functions
  */
@@ -330,9 +347,9 @@ void motor_kinematics(void *arg)
                  * If one stopped motors immediately reset all pwm values
                  */
                 if (mk_ctrl->status & MK_STOP_MOTORS) {
-                        mk_ctrl->pwm_motors[0] = 0.1f;
-                        mk_ctrl->pwm_motors[1] = 0.1f;
-                        mk_ctrl->pwm_motors[2] = 0.1f;
+                        mk_ctrl->pwm_motors[0] = 0.0f;
+                        mk_ctrl->pwm_motors[1] = 0.0f;
+                        mk_ctrl->pwm_motors[2] = 0.0f;
                 }
                 /*
                  * If motors are allowed to be running and control
@@ -387,7 +404,8 @@ int cmd_read_cord_status(void *args)
         mk_ctrl->cord_status = read_cord_status();
         if (mk_ctrl->cord_status == 1) {
                 mk_clr_stop_motors_ctrl(mk_ctrl);
-                LL_TIM_EnableCounter(MOTOR_OPERATING_TIM);
+                if (!LL_TIM_IsEnabledCounter(MOTOR_OPERATING_TIM))
+                        LL_TIM_EnableCounter(MOTOR_OPERATING_TIM);
                 xTaskNotifyGive(mk_ctrl->mk_notify);
         }
         memcpy(args, &mk_ctrl->cord_status, 1);
@@ -470,7 +488,6 @@ error_set_speed:
         return 3;
 }
 
-
 /*
  * Robot operating timer
  */
@@ -478,15 +495,13 @@ void TIM7_IRQHandler(void)
 {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         static uint32_t seconds_from_start = 0;
-        static float stop_motors[] = {0.0f, 0.0f, 0.0f};
 
         if (LL_TIM_IsActiveFlag_UPDATE(MOTOR_OPERATING_TIM)) {
                 LL_TIM_ClearFlag_UPDATE(MOTOR_OPERATING_TIM);
                 seconds_from_start++;
                 if (seconds_from_start >= MOTOR_OPERATING_TIME &&
                     mk_ctrl->session != ROBOT_SESSION_DEBUG) {
-                        mk_set_stop_motors_ctrl(mk_ctrl);
-                        mk_set_pwm(stop_motors);
+                        turn_off_all_motors();
                 }
         }
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);

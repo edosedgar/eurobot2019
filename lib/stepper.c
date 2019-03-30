@@ -143,6 +143,15 @@ void step_init(void)
         return;
 }
 
+void step_stop_motors(void)
+{
+        int i = 0;
+
+        for (i = 0; i < NUMBER_OF_STEP_MOTORS; i++)
+                step_stop(i);
+        LL_TIM_DisableCounter(STEP_TIM);
+}
+
 int step_start_calibration(uint8_t id)
 {
         if (!IS_VALID_ID(id))
