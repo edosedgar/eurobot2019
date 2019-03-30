@@ -59,6 +59,7 @@ typedef struct {
 } step_ctrl_t;
 
 void step_init(void);
+void step_stop_motors(void);
 int step_start_calibration(uint8_t id);
 int step_is_calibrated(uint8_t id);
 int step_is_running(uint8_t id);

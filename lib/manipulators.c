@@ -34,6 +34,13 @@ static void stm_driver_send_msg(uint8_t *buff, int len)
         return;
 }
 
+static void manip_dyn_stop(void)
+{
+        DYN_SET_ANGLE(manip_ctrl, 0, 255, 0, 0, 0);
+        stm_driver_send_msg(manip_ctrl->dyn_cmd[0].cmd_buff, 10);
+        return;
+}
+
 static void manip_hw_config(void)
 {
         LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
@@ -43,6 +50,38 @@ static void manip_hw_config(void)
                                  MANIP_PUMP_OUTPUT_TYPE);
         LL_GPIO_SetPinPull(MANIP_PUMP_PORT, MANIP_PUMP_PIN,
                            LL_GPIO_PULL_NO);
+}
+
+static void manip_pump_start(void)
+{
+        LL_GPIO_SetOutputPin(MANIP_PUMP_PORT, MANIP_PUMP_PIN);
+        return;
+}
+
+static void manip_pump_stop(void)
+{
+        LL_GPIO_ResetOutputPin(MANIP_PUMP_PORT, MANIP_PUMP_PIN);
+        return;
+}
+
+void manipulators_block(void)
+{
+        /*
+         * Stop and block pump
+         */
+        manip_pump_stop();
+        manip_set_flag(manip_ctrl, BLOCK_PUMP);
+        /*
+         * Stop and block dynamixels
+         */
+        manip_dyn_stop();
+        manip_set_flag(manip_ctrl, BLOCK_DYN);
+        /*
+         * Stop and block stepper
+         */
+        step_stop_motors();
+        manip_set_flag(manip_ctrl, BLOCK_STEPPER);
+        return;
 }
 
 void manipulators_manager(void *arg)
@@ -81,8 +120,13 @@ void manipulators_manager(void *arg)
  */
 int cmd_step_calibrate(char *args)
 {
+        if (is_manip_flag_set(manip_ctrl, BLOCK_STEPPER))
+                goto error_step_calibrate;
         step_start_calibration(0);
         memcpy(args, "OK", 3);
+        return 3;
+error_step_calibrate:
+        memcpy(args, "ER", 3);
         return 3;
 }
 
@@ -93,7 +137,8 @@ int cmd_step_set_step(char *args)
 {
         uint32_t *step_goal = (uint32_t *) args;
 
-        if (!step_is_calibrated(0))
+        if (!step_is_calibrated(0) ||
+            is_manip_flag_set(manip_ctrl, BLOCK_STEPPER))
                 goto error_step_set_step;
         if (step_set_step_goal(0, *step_goal))
                 goto error_step_set_step;
@@ -112,7 +157,8 @@ int cmd_step_down(char *args)
         uint32_t cur_step = 0;
         uint32_t goal_step = 0;
 
-        if (!step_is_calibrated(0))
+        if (!step_is_calibrated(0) ||
+            is_manip_flag_set(manip_ctrl, BLOCK_STEPPER))
                 goto error_step_down;
         cur_step = step_get_current_step(0);
         goal_step = cur_step + PACK_SIZE_IN_STEPS;
@@ -133,7 +179,8 @@ int cmd_step_up(char *args)
         uint32_t cur_step = 0;
         uint32_t goal_step = 0;
 
-        if (!step_is_calibrated(0))
+        if (!step_is_calibrated(0) ||
+            is_manip_flag_set(manip_ctrl, BLOCK_STEPPER))
                 goto error_step_up;
         cur_step = step_get_current_step(0);
         goal_step = cur_step - PACK_SIZE_IN_STEPS;
@@ -168,7 +215,8 @@ int cmd_set_pump_ground(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
                 goto error_set_pump_low;
         /*
          * Set dynamixel angles
@@ -201,7 +249,8 @@ int cmd_set_pump_wall(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
                 goto error_set_pump_default;
          /*
          * Set dynamixel angles
@@ -233,7 +282,8 @@ int cmd_set_pump_platform(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
                 goto error_set_pump_high;
         /*
          * Set dynamixel angles
@@ -268,7 +318,8 @@ int cmd_release_grabber(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
                 goto error_release_grabber;
         /*
          * Set dynamixel angles
@@ -299,7 +350,8 @@ int cmd_prop_pack(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
                 goto error_prop_pack;
         /*
          * Set dynamixel angles
@@ -330,7 +382,8 @@ int cmd_grab_pack(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
                 goto error_grab_pack;
         /*
          * Set dynamixel angles
@@ -361,7 +414,8 @@ int cmd_releaser_default(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
                 goto error_releaser_default;
         /*
          * Set dynamixel angles
@@ -392,7 +446,8 @@ int cmd_releaser_throw(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY))
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
                 goto error_releaser_throw;
         /*
          * Set dynamixel angles
@@ -423,13 +478,13 @@ int cmd_start_pump(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl)
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, BLOCK_PUMP))
                 goto error_start_pump;
 
         /*
          * Start pumping
          */
-        LL_GPIO_SetOutputPin(MANIP_PUMP_PORT, MANIP_PUMP_PIN);
+        manip_pump_start();
 
         memcpy(args, "OK", 3);
         return 3;
@@ -447,13 +502,13 @@ int cmd_stop_pump(char *args)
         /*
          * Check whether manipulators is ready or not
          */
-        if (!manip_ctrl)
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, BLOCK_PUMP))
                 goto error_stop_pump;
 
         /*
          * Stop pumping
          */
-        LL_GPIO_ResetOutputPin(MANIP_PUMP_PORT, MANIP_PUMP_PIN);
+        manip_pump_stop();
 
         memcpy(args, "OK", 3);
         return 3;
