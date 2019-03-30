@@ -43,6 +43,9 @@ static void manip_dyn_stop(void)
 
 static void manip_hw_config(void)
 {
+        /*
+         * Pump pin configuration
+         */
         LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
         LL_GPIO_SetPinMode(MANIP_PUMP_PORT, MANIP_PUMP_PIN,
                            LL_GPIO_MODE_OUTPUT);
@@ -50,6 +53,15 @@ static void manip_hw_config(void)
                                  MANIP_PUMP_OUTPUT_TYPE);
         LL_GPIO_SetPinPull(MANIP_PUMP_PORT, MANIP_PUMP_PIN,
                            LL_GPIO_PULL_NO);
+
+        /*
+         * Pack check pin configuration
+         */
+        LL_GPIO_SetPinMode(MANIP_PACK_CHECK_PORT, MANIP_PACK_CHECK_PIN,
+                           LL_GPIO_MODE_INPUT);
+        LL_GPIO_SetPinPull(MANIP_PACK_CHECK_PORT, MANIP_PACK_CHECK_PIN,
+                           LL_GPIO_PULL_NO);
+        return;
 }
 
 static void manip_pump_start(void)
@@ -62,6 +74,12 @@ static void manip_pump_stop(void)
 {
         LL_GPIO_ResetOutputPin(MANIP_PUMP_PORT, MANIP_PUMP_PIN);
         return;
+}
+
+static uint8_t manip_pack_check(void)
+{
+        return (uint8_t) !LL_GPIO_IsInputPinSet(MANIP_PACK_CHECK_PORT,
+                                                MANIP_PACK_CHECK_PIN);
 }
 
 void manipulators_block(void)
@@ -114,6 +132,16 @@ void manipulators_manager(void *arg)
 /*
  * Set of motor related handlers for terminal
  */
+
+/*
+ * Check pack status: 0 - fail, 1 - success
+ */
+int cmd_pack_check(char *args)
+{
+        uint8_t pack_status = manip_pack_check();
+        memcpy(args, &pack_status, 1);
+        return 1;
+}
 
 /*
  * Start step motor calibration

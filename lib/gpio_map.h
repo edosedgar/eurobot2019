@@ -65,6 +65,12 @@
 #define MOTOR_SIDE_SW_PIN                   LL_GPIO_PIN_9
 
 /*
+ * Pack checking pinout
+ */
+#define MANIP_PACK_CHECK_PORT               GPIOD
+#define MANIP_PACK_CHECK_PIN                LL_GPIO_PIN_3
+
+/*
  * Odometry pinout
  * Encoder pins
  */
