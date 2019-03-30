@@ -293,6 +293,7 @@ static void turn_off_all_motors(void)
          * Turn off maxons
          */
         mk_set_stop_motors_ctrl(mk_ctrl);
+        mk_set_stop_motors_ctrl();
         mk_set_pwm(stop_motors);
         /*
          * Turn off manipulators
@@ -347,9 +348,9 @@ void motor_kinematics(void *arg)
                  * If one stopped motors immediately reset all pwm values
                  */
                 if (mk_ctrl->status & MK_STOP_MOTORS) {
-                        mk_ctrl->pwm_motors[0] = 0.1f;
-                        mk_ctrl->pwm_motors[1] = 0.1f;
-                        mk_ctrl->pwm_motors[2] = 0.1f;
+                        mk_ctrl->pwm_motors[0] = 0.0f;
+                        mk_ctrl->pwm_motors[1] = 0.0f;
+                        mk_ctrl->pwm_motors[2] = 0.0f;
                 }
                 /*
                  * If motors are allowed to be running and control

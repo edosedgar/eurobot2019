@@ -8,7 +8,7 @@
 /*
  * Robot's movement time allowed in seconds
  */
-#define MOTOR_OPERATING_TIME           99
+#define MOTOR_OPERATING_TIME           100
 #define ROBOT_SESSION_COMPETITION       0
 #define ROBOT_SESSION_DEBUG             1
 #define ROBOT_SIDE_RIGHT                0
