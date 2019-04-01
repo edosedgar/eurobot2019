@@ -83,6 +83,43 @@ static uint8_t manip_pack_check(void)
                                                MANIP_PACK_CHECK_PIN);
 }
 
+/*
+ * Set all manipulators to default position
+ */
+static void manip_default_pos(void)
+{
+        int i = 0;
+        uint32_t cur_step = 0;
+        uint32_t goal_step = 0;
+
+        /*
+         * Start step motor calibration
+         */
+        step_start_calibration(0);
+        /*
+         * Set grabber and manipulator to default states
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x02, 0x020d, 0x00f9, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x01, 0x015a, 0x00f9, 200);
+        DYN_SET_ANGLE(manip_ctrl, 2, 0x03, 0x01cc, 0x0000, 200);
+        manip_ctrl->cmd_len = 3;
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        /*
+         * Execute dynamixel commands
+         */
+        for (i = 0; i < manip_ctrl->cmd_len; i++) {
+                stm_driver_send_msg(manip_ctrl->dyn_cmd[i].cmd_buff, 10);
+                vTaskDelay(manip_ctrl->dyn_cmd[i].delay_ms);
+        }
+        manip_clr_flag(manip_ctrl, DYN_BUSY);
+        while (step_is_running(0))
+                taskYIELD();
+        cur_step = step_get_current_step(0);
+        goal_step = cur_step + PACK_SIZE_IN_STEPS;
+        step_set_step_goal(0, goal_step);
+        return;
+}
+
 void manipulators_block(void)
 {
         /*
@@ -118,6 +155,10 @@ void manipulators_manager(void *arg)
         manip_ctrl = &manip_ctrl_st;
         manip_hw_config();
         step_init();
+        /*
+         * Set all manipulators to default position
+         */
+        manip_default_pos();
         while (1) {
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 for (i = 0; i < manip_ctrl->cmd_len; i++) {

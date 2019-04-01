@@ -293,7 +293,6 @@ static void turn_off_all_motors(void)
          * Turn off maxons
          */
         mk_set_stop_motors_ctrl(mk_ctrl);
-        mk_set_stop_motors_ctrl();
         mk_set_pwm(stop_motors);
         /*
          * Turn off manipulators
@@ -339,8 +338,7 @@ void motor_kinematics(void *arg)
         /*
          * Stop motors and wait for starting cord
          */
-        mk_set_stop_motors_ctrl(mk_ctrl);
-
+        mk_set_pwm(mk_ctrl->pwm_motors);
         while (1) {
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
