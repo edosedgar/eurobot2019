@@ -65,12 +65,6 @@
 #define MOTOR_SIDE_SW_PIN                   LL_GPIO_PIN_9
 
 /*
- * Side switcher
- */
-#define MOTOR_SIDE_SW_PORT                  GPIOD
-#define MOTOR_SIDE_SW_PIN                   LL_GPIO_PIN_9
-
-/*
  * Odometry pinout
  * Encoder pins
  */

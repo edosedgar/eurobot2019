@@ -15,12 +15,15 @@
 /*
  * Set dynamixel angle command
  */
-#define DYN_SET_ANGLE(manip_ctrl, num, id, angle, delay) \
+#define DYN_SET_ANGLE(manip_ctrl, num, id, angle, speed, delay) \
         (manip_ctrl)->dyn_cmd[(num)].cmd_buff[0] = (0x01); \
         (manip_ctrl)->dyn_cmd[(num)].cmd_buff[1] = (id); \
         (manip_ctrl)->dyn_cmd[(num)].cmd_buff[2] = (uint8_t) ((angle) & 0xff); \
         (manip_ctrl)->dyn_cmd[(num)].cmd_buff[3] = (uint8_t) (((angle) >> 8) \
                                                              & 0xff); \
+        (manip_ctrl)->dyn_cmd[(num)].cmd_buff[4] = (uint8_t) ((speed) & 0xff); \
+        (manip_ctrl)->dyn_cmd[(num)].cmd_buff[5] = (uint8_t) (((speed) >> 8) \
+                                                              & 0xff); \
         (manip_ctrl)->dyn_cmd[(num)].delay_ms = delay
 
 /*
