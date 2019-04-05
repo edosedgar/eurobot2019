@@ -609,18 +609,18 @@ error_releaser_pack:
 /*
  * Set angle to push plunium pack
  */
-int cmd_push_plunium(char *args)
+int cmd_push_blunium(char *args)
 {
         /*
          * Check whether manipulators is ready or not
          */
         if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
             || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
-                goto error_push_plunium;
+                goto error_push_blunium;
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02bd, 0x00f9, 100);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02bd, 0x00f9, 400);
         DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01fa, 0x00f9, 200);
         manip_ctrl->cmd_len = 2;
         /*
@@ -634,7 +634,37 @@ int cmd_push_plunium(char *args)
         memcpy(args, "OK", 3);
         return 3;
 
-error_push_plunium:
+error_push_blunium:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+int cmd_swing_blunium(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
+                goto error_swing_blunium;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x02bd, 0x00f9, 500); // TODO change angle
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x01fa, 0x00f9, 200);
+        manip_ctrl->cmd_len = 2;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_swing_blunium:
         memcpy(args, "ER", 3);
         return 3;
 }
@@ -653,7 +683,7 @@ int cmd_take_goldenium(char *args)
         /*
          * Set dynamixel angles
          */
-        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x030b, 0x00f9, 100);
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x030b, 0x00f9, 400);
         DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0267, 0x00f9, 200);
         manip_ctrl->cmd_len = 2;
         /*
