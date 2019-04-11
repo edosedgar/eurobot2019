@@ -280,6 +280,39 @@ error_step_is_running:
 /*
  * Set pump to ground
  */
+int cmd_set_pump_moving(char *args)
+{
+        /*
+         * Check whether manipulators is ready or not
+         */
+        if (!manip_ctrl || is_manip_flag_set(manip_ctrl, DYN_BUSY)
+            || is_manip_flag_set(manip_ctrl, BLOCK_DYN))
+                goto error_set_pump_moving;
+        /*
+         * Set dynamixel angles
+         */
+        DYN_SET_ANGLE(manip_ctrl, 0, 0x01, 0x030c, 0x00f9, 100);
+        DYN_SET_ANGLE(manip_ctrl, 1, 0x02, 0x0194, 0x00f9, 400);
+        manip_ctrl->cmd_len = 2;
+        /*
+         * Notify manipulators manager
+         */
+        manip_set_flag(manip_ctrl, DYN_BUSY);
+        xTaskNotifyGive(manip_ctrl->manip_notify);
+        /*
+         * Sent command to stm
+         */
+        memcpy(args, "OK", 3);
+        return 3;
+
+error_set_pump_moving:
+        memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Set pump to ground
+ */
 int cmd_set_pump_ground(char *args)
 {
         /*
