@@ -158,6 +158,7 @@ int step_start_calibration(uint8_t id)
                 return -1;
         step_clr_flag(step_ctrl[id], STEP_CALIBRATED);
         step_set_flag(step_ctrl[id], STEP_START_CALIBRATION);
+        step_set_flag(step_ctrl[id], STEP_RUNNING);
         LL_TIM_EnableCounter(STEP_TIM);
         return 0;
 }

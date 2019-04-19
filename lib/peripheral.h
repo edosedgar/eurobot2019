@@ -89,7 +89,7 @@
 #define STEP_TIM_ARR                            500
 #define STEP_TIM_PSC                            419
 #define STEP_TIM_IRQN                           TIM5_IRQn
-#define STEP_TIM_IRQN_PRIORITY                  1
+#define STEP_TIM_IRQN_PRIORITY                  (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
 
 /*
  * Motor kinematics timer configuration
@@ -124,6 +124,16 @@
 #define ODOMETRY_IRQN_PRIORITY                  (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 2)
 #define ODOMETRY_TIM_ARR                        42000
 #define ODOMETRY_TIM_PSC                        20
+
+/*
+ * Dynamixel update status timer configuration
+ * APB2_CLK = 84000000, TIM_MULL x2, freq = 1000Hz
+ */
+#define DYNAMIXEL_TIM                           TIM8
+#define DYNAMIXEL_TIM_IRQN                      TIM8_UP_TIM13_IRQn
+#define DYNAMIXEL_TIM_IRQN_PRIORITY             (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 2)
+#define DYNAMIXEL_TIM_ARR                       999
+#define DYNAMIXEL_TIM_PSC                       167
 
 /*
  * Robot operating timer
