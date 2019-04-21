@@ -126,6 +126,16 @@
 #define ODOMETRY_TIM_PSC                        20
 
 /*
+ * Dynamixel update status timer configuration
+ * APB2_CLK = 84000000, TIM_MULL x2, freq = 1000Hz
+ */
+#define DYNAMIXEL_TIM                           TIM8
+#define DYNAMIXEL_TIM_IRQN                      TIM8_UP_TIM13_IRQn
+#define DYNAMIXEL_TIM_IRQN_PRIORITY             (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 2)
+#define DYNAMIXEL_TIM_ARR                       999
+#define DYNAMIXEL_TIM_PSC                       167
+
+/*
  * Robot operating timer
  * APB1_CLK = 84000000, TIM_PCS = 41999, TIM_ARR = 1999, freq = 1Hz
  */
