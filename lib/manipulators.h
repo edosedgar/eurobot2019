@@ -17,8 +17,11 @@
 #define LAST_CMD_DELAY                  (float) 350
 #define CONVERT_COEF_MS                 (float) 436
 #define GRABBER_THROW_DELAY             200
+#define SET_PUMP_PLATFORM_DELAY         200
+#define SET_PUMP_GROUND_DELAY           200
 
-#define DYN_SPEEDS  0x0200, 0x0200, 0x0300, 0x0300
+#define DYN_SPEEDS      0x0200, 0x0200, 0x0300, 0x0300
+#define DYN_INIT_POS    0x03e1, 0x01f8, 0x01dd, 0x015d
 
 /*
  * Set dynamixel angle command

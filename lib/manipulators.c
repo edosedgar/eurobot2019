@@ -187,8 +187,24 @@ static void dyn_set_speeds(void)
         memset(tx, 0x00, 10);
         tx[0] = 0x01;
         for (i = 0, j = 1; i < NUMBER_OF_DYNAMIXELS; i++, j = j + 2) {
-                tx[j+1] = (uint8_t) (manip_ctrl->dyn_speeds[i] & 0xff);
                 tx[j] = (uint8_t) ((manip_ctrl->dyn_speeds[i] >> 8) & 0xff);
+                tx[j+1] = (uint8_t) (manip_ctrl->dyn_speeds[i] & 0xff);
+        }
+        stm_driver_send_msg(tx, 10);
+        return;
+}
+
+static void dyn_set_init_pos(void)
+{
+        uint8_t tx[10];
+        int i = 0;
+        int j = 0;
+
+        memset(tx, 0x00, 10);
+        tx[0] = 0x03;
+        for (i = 0, j = 1; i < NUMBER_OF_DYNAMIXELS; i++, j = j + 2) {
+                tx[j] = (uint8_t) ((manip_ctrl->dyn_pos[i] >> 8) & 0xff);
+                tx[j+1] = (uint8_t) (manip_ctrl->dyn_pos[i] & 0xff);
         }
         stm_driver_send_msg(tx, 10);
         return;
@@ -213,6 +229,7 @@ static void manip_default_pos(void)
         cur_step = step_get_current_step(0);
         goal_step = cur_step + PACK_SIZE_IN_STEPS;
         step_set_step_goal(0, goal_step);
+        dyn_set_init_pos();
         return;
 }
 
@@ -245,6 +262,7 @@ void manipulators_manager(void *arg)
         manip_ctrl_t manip_ctrl_st;
         int i = 0;
         uint16_t dyn_speeds[] = {DYN_SPEEDS};
+        uint16_t dyn_init_pos[] = {DYN_INIT_POS};
 
         manip_ctrl_st.manip_notify = xTaskGetCurrentTaskHandle();
         manip_ctrl_st.dyn_status = 0x00;
@@ -256,6 +274,7 @@ void manipulators_manager(void *arg)
         for (i = 0; i < NUMBER_OF_DYNAMIXELS; i++) {
                 manip_ctrl_st.dyn_pos[i] = 0x0000;
                 manip_ctrl_st.dyn_speeds[i] = dyn_speeds[i];
+                manip_ctrl_st.dyn_pos[i] = dyn_init_pos[i];
         }
         for (i = 0; i < MAX_DYN_COMMANDS; i++) {
                 memset(manip_ctrl_st.sequence_cmd[i].cmd_buff, 0, 10);
@@ -424,6 +443,8 @@ int cmd_set_pump_ground(char *args)
         dyn_set_angle(1, 0x02, 0x0292, manip_ctrl->dyn_speeds[1]);
         dyn_set_angle(2, 0x01, 0x01af, manip_ctrl->dyn_speeds[0]);
         dyn_set_angle(3, 0x02, 0x0262, manip_ctrl->dyn_speeds[1]);
+        manip_ctrl->sequence_cmd[manip_ctrl->total_cmd - 1].delay_ms +=
+                                                        SET_PUMP_GROUND_DELAY;
         /*
          * Notify manipulators manager
          */
@@ -493,6 +514,8 @@ int cmd_set_pump_platform(char *args)
         dyn_set_angle(2, 0x01, 0x03ba, manip_ctrl->dyn_speeds[0]);
         dyn_set_angle(3, 0x02, 0x01f8, manip_ctrl->dyn_speeds[1]);
         dyn_set_angle(4, 0x01, 0x03e1, manip_ctrl->dyn_speeds[0]);
+        manip_ctrl->sequence_cmd[manip_ctrl->total_cmd - 1].delay_ms +=
+                                                        SET_PUMP_PLATFORM_DELAY;
         /*
          * Notify manipulators manager
          */
@@ -618,6 +641,8 @@ int cmd_grabber_throw(char *args)
          * Set dynamixel angles
          */
         dyn_set_angle(0, 0x03, 0x327, manip_ctrl->dyn_speeds[2]);
+        manip_ctrl->sequence_cmd[manip_ctrl->total_cmd - 1].delay_ms +=
+                                                            GRABBER_THROW_DELAY;
         /*
          * Notify manipulators manager
          */
@@ -682,8 +707,6 @@ int cmd_releaser_throw(char *args)
          * Set dynamixel angles
          */
         dyn_set_angle(0, 0x04, 0x02a5, manip_ctrl->dyn_speeds[3]);
-        manip_ctrl->sequence_cmd[manip_ctrl->total_cmd - 1].delay_ms +=
-                                                            GRABBER_THROW_DELAY;
         /*
          * Notify manipulators manager
          */
