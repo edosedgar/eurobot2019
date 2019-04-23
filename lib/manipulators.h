@@ -16,8 +16,10 @@
 #define CONVERT_COEF_MS                 (float) 436
 #define SET_PUMP_PLATFORM_DELAY         (uint32_t) 600
 #define GRAB_PACK_DELAY                 (uint32_t) 400
+#define RELEASER_THROW_DELAY            (uint32_t) 400
 
-#define DYN_SPEEDS  0x0200, 0x0200, 0x0300, 0x03ff
+#define DYN_SPEEDS      0x0200, 0x0200, 0x0300, 0x03ff
+#define DYN_INIT_POS    0x015a, 0x020d, 0x01cc, 0x01eb
 
 /*
  * Set dynamixel angle command
