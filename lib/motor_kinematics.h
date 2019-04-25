@@ -42,14 +42,16 @@ typedef struct {
 enum motor_kinem_status_flags {
         MK_PWM_CONTROL_BIT,
         MK_SPEED_CONTROL_BIT,
-        MK_STOP_MOTORS_BIT
+        MK_STOP_MOTORS_BIT,
+        MK_BLOCK_MOTORS_BIT
 };
 
 #define ENUM_FLAG(name) name = 1 << name##_BIT
 enum mk_flags {
         ENUM_FLAG(MK_PWM_CONTROL),
         ENUM_FLAG(MK_SPEED_CONTROL),
-        ENUM_FLAG(MK_STOP_MOTORS)
+        ENUM_FLAG(MK_STOP_MOTORS),
+        ENUM_FLAG(MK_BLOCK_MOTORS)
 };
 
 #define is_manip_flag_set(manip_ctrl, bit) \

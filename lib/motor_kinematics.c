@@ -268,6 +268,12 @@ static void mk_set_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
         return;
 }
 
+static void mk_set_block_motors_ctrl(motors_ctrl_t *mk_ctrl)
+{
+        mk_ctrl->status |= MK_BLOCK_MOTORS;
+        return;
+}
+
 static void mk_clr_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
 {
         mk_ctrl->status &= ~(MK_STOP_MOTORS);
@@ -292,7 +298,7 @@ static void turn_off_all_motors(void)
         /*
          * Turn off maxons
          */
-        mk_set_stop_motors_ctrl(mk_ctrl);
+        mk_set_block_motors_ctrl(mk_ctrl);
         mk_set_pwm(stop_motors);
         /*
          * Turn off manipulators
@@ -344,12 +350,18 @@ void motor_kinematics(void *arg)
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
                 /*
+                 * If motors are blocked don't do anything
+                 */
+                if(mk_ctrl->status & MK_BLOCK_MOTORS) {
+                    continue;
+                }
+                /*
                  * If one stopped motors immediately reset all pwm values
                  */
                 if (mk_ctrl->status & MK_STOP_MOTORS) {
-                        mk_ctrl->pwm_motors[0] = 0.0f;
-                        mk_ctrl->pwm_motors[1] = 0.0f;
-                        mk_ctrl->pwm_motors[2] = 0.0f;
+                        mk_ctrl->pwm_motors[0] = 0.1f;
+                        mk_ctrl->pwm_motors[1] = 0.1f;
+                        mk_ctrl->pwm_motors[2] = 0.1f;
                 }
                 /*
                  * If motors are allowed to be running and control
