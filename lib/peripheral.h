@@ -122,8 +122,8 @@
 #define ODOMETRY_TIM_MODULE                     TIM6
 #define ODOMETRY_IRQN                           TIM6_DAC_IRQn
 #define ODOMETRY_IRQN_PRIORITY                  (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 2)
-#define ODOMETRY_TIM_ARR                        42000
-#define ODOMETRY_TIM_PSC                        20
+#define ODOMETRY_TIM_ARR                        41999
+#define ODOMETRY_TIM_PSC                        19
 
 /*
  * Dynamixel update status timer configuration
