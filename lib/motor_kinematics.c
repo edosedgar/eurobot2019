@@ -228,6 +228,22 @@ static void mk_hw_config()
         LL_GPIO_SetPinMode(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_MODE_INPUT);
         LL_GPIO_SetPinPull(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_PULL_NO);
 
+        /* Setting strategy button */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+        LL_GPIO_SetPinMode(MOTOR_STRATEGY_PORT, MOTOR_STRATEGY_PIN,
+                           LL_GPIO_MODE_INPUT);
+        LL_GPIO_SetPinPull(MOTOR_STRATEGY_PORT, MOTOR_STRATEGY_PIN,
+                           LL_GPIO_PULL_NO);
+        /* Setting up interrupt */
+        LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+        LL_SYSCFG_SetEXTISource(MOTOR_STRATEGY_SYS_EXTI_PORT,
+                                MOTOR_STRATEGY_SYS_EXTI_LINE);
+        LL_EXTI_EnableIT_0_31(MOTOR_STRATEGY_EXTI_LINE);
+        LL_EXTI_EnableRisingTrig_0_31(MOTOR_STRATEGY_EXTI_LINE);
+        LL_EXTI_EnableFallingTrig_0_31(MOTOR_STRATEGY_EXTI_LINE);
+        NVIC_SetPriority(MOTOR_STRATEGY_IRQN, MOTOR_STRATEGY_IRQN_PRIORITY);
+        NVIC_EnableIRQ(MOTOR_STRATEGY_IRQN);
+
         /* Setting side switcher pin */
         LL_GPIO_SetPinMode(MOTOR_SIDE_SW_PORT, MOTOR_SIDE_SW_PIN,
                            LL_GPIO_MODE_INPUT);
@@ -323,6 +339,7 @@ void motor_kinematics(void *arg)
                 .status = 0x00,
                 .session = ROBOT_SESSION_COMPETITION,
                 .cord_status = 0,
+                .strategy_num = 0,
                 .side = ROBOT_SIDE_RIGHT,
                 .vel_x = 0.0f,
                 .vel_y = 0.0f,
@@ -420,6 +437,14 @@ int cmd_read_side_switch(void *args)
         memcpy(args, &mk_ctrl->side, 1);
         return 1;
 }
+/*
+ * Command for readung current strategy determined by external button
+ */
+int cmd_read_strategy(void *args)
+{
+        memcpy(args, &mk_ctrl->strategy_num, 1);
+        return 1;
+}
 
 /*
  * Set motors pwm command
@@ -503,5 +528,17 @@ void TIM7_IRQHandler(void)
                         turn_off_all_motors();
                 }
         }
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+/*
+ * Button interrupt handler
+ */
+void EXTI0_IRQHandler(void)
+{
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        mk_ctrl->strategy_num = (mk_ctrl->strategy_num + 1) % \
+                                NUMBER_OF_STRATEGIES;
+        LL_EXTI_ClearFlag_0_31(MOTOR_STRATEGY_EXTI_LINE);
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
