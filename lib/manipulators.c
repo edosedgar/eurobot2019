@@ -72,6 +72,75 @@ static void manip_hw_config(void)
         LL_TIM_EnableIT_UPDATE(DYNAMIXEL_TIM);
         NVIC_SetPriority(DYNAMIXEL_TIM_IRQN, DYNAMIXEL_TIM_IRQN_PRIORITY);
         NVIC_EnableIRQ(DYNAMIXEL_TIM_IRQN);
+        /*
+         * Barometer configuration
+         * Timer configuration for external ADC trigger
+         */
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM5);
+        LL_TIM_SetCounterMode(BAR_TIM, LL_TIM_COUNTERMODE_UP);
+        LL_TIM_SetPrescaler(BAR_TIM, BAR_PWM_TIM_PSC);
+        LL_TIM_SetAutoReload(BAR_TIM, BAR_PWM_TIM_ARR);
+        LL_TIM_CC_EnableChannel(BAR_TIM, BAR_TIM_OC_CHANNEL);
+        LL_TIM_OC_SetMode(BAR_TIM, BAR_TIM_OC_CHANNEL, LL_TIM_OCMODE_PWM1);
+        LL_TIM_OC_EnablePreload(BAR_TIM, BAR_TIM_OC_CHANNEL);
+        LL_TIM_OC_SetCompareCH1(BAR_TIM, BAR_PWM_TIM_CCR_INIT);
+        LL_TIM_GenerateEvent_UPDATE(BAR_TIM);
+        /*
+         * ADC pin configuration
+         */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
+        LL_GPIO_SetPinMode(BAR_PORT, BAR_PIN, LL_GPIO_MODE_ANALOG);
+        /*
+         * ADC configuration
+         */
+        LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_ADC1);
+        LL_ADC_SetCommonClock(BAR_ADC_CMN_INST, LL_ADC_CLOCK_SYNC_PCLK_DIV2);
+        LL_ADC_REG_SetSequencerRanks(BAR_ADC, LL_ADC_REG_RANK_1,
+                                     BAR_ADC_CHANNEL);
+        LL_ADC_REG_SetSequencerLength(BAR_ADC, LL_ADC_REG_SEQ_SCAN_DISABLE);
+        LL_ADC_SetResolution(BAR_ADC, BAR_ADC_RESOLUTION);
+        LL_ADC_SetDataAlignment(BAR_ADC, BAR_ADC_ALIGN);
+        LL_ADC_SetSequencersScanMode(BAR_ADC, BAR_ADC_SEQ_SCAN);
+        LL_ADC_REG_SetTriggerSource(BAR_ADC, BAR_ADC_TRIG);
+        LL_ADC_REG_SetContinuousMode(BAR_ADC, BAR_ADC_SINGLE_MODE);
+        LL_ADC_REG_SetDMATransfer(BAR_ADC, BAR_ADC_DMA_MODE);
+        LL_ADC_REG_SetFlagEndOfConversion(BAR_ADC, BAR_ADC_EOC_MODE);
+        LL_ADC_SetChannelSamplingTime(BAR_ADC, BAR_ADC_CHANNEL,
+                                      BAR_ADC_SAMPL_TIME);
+        // LL_ADC_EnableIT_EOCS(BAR_ADC);
+        // NVIC_SetPriority(ADC_IRQn, 6);
+        // NVIC_EnableIRQ(ADC_IRQn);
+
+        LL_ADC_Enable(BAR_ADC);
+        // LL_ADC_REG_StartConversionSWStart(BAR_ADC);
+        LL_ADC_REG_StartConversionExtTrig(BAR_ADC, BAR_ADC_TRIG_POLARITY);
+        LL_TIM_EnableCounter(BAR_TIM);
+
+        /*
+         * TODO TEST OVERRUN flag if dma doesn't work
+         *  LL_ADC_EnableIT_OVR
+         */
+        /*
+         * DMA configuration
+         */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA2);
+        LL_DMA_SetChannelSelection(BAR_DMA, BAR_DMA_STREAM, BAR_DMA_CHANNEL);
+        LL_DMA_ConfigAddresses(BAR_DMA, BAR_DMA_STREAM, BAR_DMA_SRC_ADDR,
+                               (uint32_t) &manip_ctrl->bar_adc_samples[0],
+                               BAR_DMA_DIRECTION);
+        LL_DMA_SetDataLength(BAR_DMA, BAR_DMA_STREAM, BAR_ADC_SAMPLES_SIZE);
+        LL_DMA_SetPeriphSize(BAR_DMA, BAR_DMA_STREAM, LL_DMA_PDATAALIGN_BYTE);
+        LL_DMA_SetMemorySize(BAR_DMA, BAR_DMA_STREAM, LL_DMA_MDATAALIGN_BYTE);
+        LL_DMA_SetMode(BAR_DMA, BAR_DMA_STREAM, BAR_DMA_MODE);
+        LL_DMA_SetMemoryIncMode(BAR_DMA, BAR_DMA_STREAM,
+                                BAR_DMA_MEM_INC_MODE);
+        LL_DMA_SetPeriphIncMode(BAR_DMA, BAR_DMA_STREAM,
+                                BAR_DMA_PERIPH_INC_MODE);
+        LL_DMA_SetStreamPriorityLevel(BAR_DMA, BAR_DMA_STREAM,
+                                      LL_DMA_PRIORITY_VERYHIGH);
+        LL_DMA_EnableStream(BAR_DMA, BAR_DMA_STREAM);
+        // LL_DMA_EnableIT_TC(BAR_DMA, BAR_DMA_STREAM);
+        // NVIC_SetPriority(BAR_DMA_STREAM_IRQN, BAR_DMA_STREAM_IRQN_PRIORITY);
         return;
 }
 
@@ -271,6 +340,7 @@ void manipulators_manager(void *arg)
         manip_ctrl_st.total_cmd = 0;
         manip_ctrl_st.current_cmd = 0;
         manip_ctrl_st.completed_cmd = 0;
+        manip_ctrl_st.bar_check = 0;
         for (i = 0; i < NUMBER_OF_DYNAMIXELS; i++) {
                 manip_ctrl_st.dyn_pos[i] = 0x0000;
                 manip_ctrl_st.dyn_speeds[i] = dyn_speeds[i];
@@ -330,6 +400,22 @@ int cmd_pack_check(char *args)
 {
         uint8_t pack_status = manip_pack_check();
         memcpy(args, &pack_status, 1);
+        return 1;
+}
+
+int cmd_bar_check(char *args)
+{
+        int i = 0;
+        uint32_t average_sample = 0;
+
+        for (i = 0; i < BAR_ADC_SAMPLES_SIZE; i++) {
+                average_sample += manip_ctrl->bar_adc_samples[i];
+        }
+        average_sample /= BAR_ADC_SAMPLES_SIZE;
+        if (average_sample > BAR_PACK_CHECK_TRESHOLD)
+                *args = 0;
+        else
+                *args = 1;
         return 1;
 }
 

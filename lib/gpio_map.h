@@ -110,7 +110,12 @@
 /*
  * Limit switch pin for step motor calibration
  */
-#define STEP_LIMIT_SWITCH_PORT             GPIOD
-#define STEP_LIMIT_SWITCH_PIN              LL_GPIO_PIN_0
+#define STEP_LIMIT_SWITCH_PORT              GPIOD
+#define STEP_LIMIT_SWITCH_PIN               LL_GPIO_PIN_0
 
+/*
+ * Barometer ADC pinout
+ */
+#define BAR_PORT                            GPIOC
+#define BAR_PIN                             LL_GPIO_PIN_2
 #endif

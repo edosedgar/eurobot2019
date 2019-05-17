@@ -9,6 +9,7 @@
 #include "stm32f4xx_ll_tim.h"
 #include "stm32f4xx_ll_system.h"
 #include "stm32f4xx_ll_exti.h"
+#include "stm32f4xx_ll_adc.h"
 
 /*
  * Clock configuration parameters
@@ -82,14 +83,14 @@
 
 /*
  * Srtepper motor timer
- * APB1_CLK = 42000000, T = 5 ms
+ * APB2_CLK = 84000000, T = 5 ms
  */
-#define STEP_TIM                                TIM5
+#define STEP_TIM                                TIM9
 #define STEP_TIM_MODE                           LL_TIM_COUNTERMODE_UP
 #define STEP_TIM_ARR                            500
-#define STEP_TIM_PSC                            419
-#define STEP_TIM_IRQN                           TIM5_IRQn
-#define STEP_TIM_IRQN_PRIORITY                  1
+#define STEP_TIM_PSC                            839
+#define STEP_TIM_IRQN                           TIM1_BRK_TIM9_IRQn
+#define STEP_TIM_IRQN_PRIORITY                  (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
 
 /*
  * Motor kinematics timer configuration
@@ -154,4 +155,46 @@
 #define MOTOR_STRATEGY_IRQN                     EXTI0_IRQn
 #define MOTOR_STRATEGY_IRQN_PRIORITY            (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
 
-#endif
+/*
+ * Barometer timer for ADC configuration
+ * APB1_CLK*2 = 84000000, PSC = 4200, ARR = 200, CCR = ARR/2 (50% duticycle)
+ */
+#define BAR_TIM                                 TIM5
+#define BAR_TIM_OC_CHANNEL                      LL_TIM_CHANNEL_CH1
+#define BAR_PWM_TIM_PSC                         4199
+#define BAR_PWM_TIM_ARR                         199
+#define BAR_PWM_TIM_CCR_INIT                    100
+
+/*
+ * ADC configuration
+ */
+#define BAR_ADC                                 ADC1
+#define BAR_ADC_CMN_INST                        ADC123_COMMON
+#define BAR_ADC_CHANNEL                         LL_ADC_CHANNEL_12
+#define BAR_ADC_RESOLUTION                      LL_ADC_RESOLUTION_8B
+#define BAR_ADC_ALIGN                           LL_ADC_DATA_ALIGN_RIGHT
+#define BAR_ADC_SEQ_SCAN                        LL_ADC_SEQ_SCAN_DISABLE
+#define BAR_ADC_TRIG                            LL_ADC_REG_TRIG_EXT_TIM5_CH1
+#define BAR_ADC_SINGLE_MODE                     LL_ADC_REG_CONV_SINGLE
+#define BAR_ADC_DMA_MODE                        LL_ADC_REG_DMA_TRANSFER_UNLIMITED
+#define BAR_ADC_EOC_MODE                        LL_ADC_REG_FLAG_EOC_UNITARY_CONV
+#define BAR_ADC_SAMPL_TIME                      LL_ADC_SAMPLINGTIME_15CYCLES
+#define BAR_ADC_TRIG_POLARITY                   LL_ADC_REG_TRIG_EXT_RISING
+
+/*
+ * DMA for barometer ADC configuration
+ */
+#define BAR_DMA                                 DMA2
+#define BAR_DMA_CHANNEL                         LL_DMA_CHANNEL_0
+#define BAR_DMA_STREAM                          LL_DMA_STREAM_0
+// #define BAR_DMA_STREAM_IRQN                     DMA1_Stream7_IRQn
+// #define BAR_DMA_STREAM_IRQN_PRIORITY            (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
+#define BAR_DMA_DIRECTION                       LL_DMA_DIRECTION_PERIPH_TO_MEMORY
+#define BAR_DMA_BUFFER_SIZE                     20
+#define BAR_DMA_MEM_INC_MODE                    LL_DMA_MEMORY_INCREMENT
+#define BAR_DMA_PERIPH_INC_MODE                 LL_DMA_PERIPH_NOINCREMENT
+#define BAR_DMA_MODE                            LL_DMA_MODE_CIRCULAR
+#define BAR_DMA_SRC_ADDR                        (uint32_t)&(ADC1->DR)
+
+
+#endif //_H_PERIPHERAL_
