@@ -63,6 +63,34 @@ static void manip_hw_config(void)
         LL_GPIO_SetPinPull(MANIP_PACK_CHECK_PORT, MANIP_PACK_CHECK_PIN,
                            LL_GPIO_PULL_NO);
         /*
+         * Servo motors pin configuration
+         */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
+        LL_GPIO_SetPinMode(STICK_PORT, STICK_LEFT_PIN, LL_GPIO_MODE_ALTERNATE);
+        LL_GPIO_SetPinMode(STICK_PORT, STICK_RIGHT_PIN, LL_GPIO_MODE_ALTERNATE);
+        LL_GPIO_SetAFPin_8_15(STICK_PORT, STICK_LEFT_PIN, STICK_PIN_AF);
+        LL_GPIO_SetAFPin_8_15(STICK_PORT, STICK_RIGHT_PIN, STICK_PIN_AF);
+        /*
+         * Servo motors PWM timer configuration
+         */
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM12);
+        LL_TIM_SetCounterMode(STICK_TIM, LL_TIM_COUNTERMODE_UP);
+        LL_TIM_SetPrescaler(STICK_TIM, STICK_TIM_PSC);
+        LL_TIM_SetAutoReload(STICK_TIM, STICK_TIM_ARR);
+        LL_TIM_CC_EnableChannel(STICK_TIM, LL_TIM_CHANNEL_CH1 |
+                                LL_TIM_CHANNEL_CH2);
+        LL_TIM_OC_EnableFast(STICK_TIM, LL_TIM_CHANNEL_CH1);
+        LL_TIM_OC_EnableFast(STICK_TIM, LL_TIM_CHANNEL_CH2);
+        LL_TIM_OC_EnablePreload(STICK_TIM, LL_TIM_CHANNEL_CH1);
+        LL_TIM_OC_EnablePreload(STICK_TIM, LL_TIM_CHANNEL_CH2);
+        LL_TIM_EnableARRPreload(STICK_TIM);
+        LL_TIM_OC_SetMode(STICK_TIM, LL_TIM_CHANNEL_CH1, LL_TIM_OCMODE_PWM1);
+        LL_TIM_OC_SetMode(STICK_TIM, LL_TIM_CHANNEL_CH2, LL_TIM_OCMODE_PWM1);
+        LL_TIM_OC_SetCompareCH1(STICK_TIM, STEP_TIM_LEFT_CCR_INIT);
+        LL_TIM_OC_SetCompareCH2(STICK_TIM, STEP_TIM_RIGHT_CCR_INIT);
+        LL_TIM_GenerateEvent_UPDATE(STICK_TIM);
+        LL_TIM_EnableCounter(STICK_TIM);
+        /*
          * Dynamixel update timer
          */
         LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM8);
@@ -72,6 +100,18 @@ static void manip_hw_config(void)
         LL_TIM_EnableIT_UPDATE(DYNAMIXEL_TIM);
         NVIC_SetPriority(DYNAMIXEL_TIM_IRQN, DYNAMIXEL_TIM_IRQN_PRIORITY);
         NVIC_EnableIRQ(DYNAMIXEL_TIM_IRQN);
+        return;
+}
+
+static void stick_left_set_angle(uint8_t angle)
+{
+        LL_TIM_OC_SetCompareCH1(STICK_TIM, angle);
+        return;
+}
+
+static void stick_right_set_angle(uint8_t angle)
+{
+        LL_TIM_OC_SetCompareCH2(STICK_TIM, angle);
         return;
 }
 
@@ -410,8 +450,8 @@ error_step_up:
 }
 
 /*
-* Retern running state
-*/
+ * Retern running state
+ */
 int cmd_step_is_running(char *args)
 {
         if (step_is_running(0))
@@ -420,6 +460,46 @@ int cmd_step_is_running(char *args)
         return 3;
 error_step_is_running:
         memcpy(args, "ER", 3);
+        return 3;
+}
+
+/*
+ * Left stick to default position
+ */
+int cmd_left_stick_default(char *args)
+{
+        stick_left_set_angle(135);
+        memcpy(args, "OK", 3);
+        return 3;
+}
+
+/*
+ * Left stick to down position
+ */
+int cmd_left_stick_down(char *args)
+{
+        stick_left_set_angle(222);
+        memcpy(args, "OK", 3);
+        return 3;
+}
+
+/*
+ * Right stick to default position
+ */
+int cmd_right_stick_default(char *args)
+{
+        stick_right_set_angle(180);
+        memcpy(args, "OK", 3);
+        return 3;
+}
+
+/*
+ * Right stick to down position
+ */
+int cmd_right_stick_down(char *args)
+{
+        stick_right_set_angle(92);
+        memcpy(args, "OK", 3);
         return 3;
 }
 

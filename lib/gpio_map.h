@@ -77,6 +77,14 @@
 #define MANIP_PACK_CHECK_PIN                LL_GPIO_PIN_4
 
 /*
+ * Servo motors pinout
+ */
+#define STICK_PORT                          GPIOB
+#define STICK_LEFT_PIN                      LL_GPIO_PIN_14
+#define STICK_RIGHT_PIN                     LL_GPIO_PIN_15
+#define STICK_PIN_AF                        LL_GPIO_AF_9
+
+/*
  * Odometry pinout
  * Encoder pins
  */

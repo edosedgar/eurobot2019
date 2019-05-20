@@ -13,7 +13,7 @@
 #define ROBOT_SESSION_DEBUG             1
 #define ROBOT_SIDE_RIGHT                0
 #define ROBOT_SIDE_LEFT                 1
-#define NUMBER_OF_STRATEGIES            6
+#define NUMBER_OF_STRATEGIES            3
 
 /*
  * SET_PWM command args structure

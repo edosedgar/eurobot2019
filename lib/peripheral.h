@@ -102,6 +102,16 @@
 #define MOTOR_PWM_TIM_PSC                       1
 
 /*
+ * Chaos stick PWM timer
+ * APB1_CLK = 42000000, CLK = 84000000, TIM_ARR = 42000, freq_pwm = 1KHz
+ */
+#define STICK_TIM                               TIM12
+#define STICK_TIM_ARR                           1999
+#define STICK_TIM_PSC                           839
+#define STEP_TIM_LEFT_CCR_INIT                  135
+#define STEP_TIM_RIGHT_CCR_INIT                 180
+
+/*
  * Odometry configuration
  * Encoder times configuration
  */
