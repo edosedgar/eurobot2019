@@ -527,8 +527,8 @@ int cmd_set_pump_ground(char *args)
          */
         dyn_set_angle(0, 0x01, 0x023c, manip_ctrl->dyn_speeds[0]);
         dyn_set_angle(1, 0x02, 0x02bb, manip_ctrl->dyn_speeds[1]);
-        dyn_set_angle(2, 0x01, 0x01e4, manip_ctrl->dyn_speeds[0]);
-        dyn_set_angle(3, 0x02, 0x026c, manip_ctrl->dyn_speeds[1]);
+        dyn_set_angle(2, 0x01, 0x01c1, manip_ctrl->dyn_speeds[0]);
+        dyn_set_angle(3, 0x02, 0x0281, manip_ctrl->dyn_speeds[1]);
         manip_ctrl->sequence_cmd[manip_ctrl->total_cmd - 1].delay_ms +=
                                                         SET_PUMP_GROUND_DELAY;
         /*
@@ -562,8 +562,8 @@ int cmd_set_pump_wall(char *args)
          /*
          * Set dynamixel angles
          */
-        dyn_set_angle(0, 0x01, 0x02Bf, manip_ctrl->dyn_speeds[0]);
-        dyn_set_angle(1, 0x02, 0x01e7, manip_ctrl->dyn_speeds[1]);
+        dyn_set_angle(0, 0x01, 0x0289, manip_ctrl->dyn_speeds[0]);
+        dyn_set_angle(1, 0x02, 0x01f6, manip_ctrl->dyn_speeds[1]);
         /*
          * Notify manipulators manager
          */
@@ -598,8 +598,8 @@ int cmd_set_pump_platform(char *args)
         dyn_set_angle(0, 0x01, 0x038e, manip_ctrl->dyn_speeds[0]);
         dyn_set_angle(1, 0x02, 0x01e0, manip_ctrl->dyn_speeds[1]);
         dyn_set_angle(2, 0x01, 0x03c2, manip_ctrl->dyn_speeds[0]);
-        dyn_set_angle(3, 0x02, 0x0206, manip_ctrl->dyn_speeds[1]);
-        dyn_set_angle(4, 0x01, 0x03ff, manip_ctrl->dyn_speeds[0]);
+        dyn_set_angle(3, 0x02, 0x01f8, manip_ctrl->dyn_speeds[1]);
+        dyn_set_angle(4, 0x01, 0x03e1, manip_ctrl->dyn_speeds[0]);
         manip_ctrl->sequence_cmd[manip_ctrl->total_cmd - 1].delay_ms +=
                                                         SET_PUMP_PLATFORM_DELAY;
         /*
@@ -843,7 +843,7 @@ error_releaser_pack:
 }
 
 /*
- * Set angle to take plunium pack
+ * Set angle to take blunium pack
  */
 int cmd_take_blunium(char *args)
 {
@@ -856,8 +856,8 @@ int cmd_take_blunium(char *args)
         /*
          * Set dynamixel angles
          */
-        dyn_set_angle(0, 0x01, 0x0344, manip_ctrl->dyn_speeds[0]);
-        dyn_set_angle(1, 0x02, 0x0272, manip_ctrl->dyn_speeds[1]);
+        dyn_set_angle(0, 0x01, 0x02ff, manip_ctrl->dyn_speeds[0]);
+        dyn_set_angle(1, 0x02, 0x0265, manip_ctrl->dyn_speeds[1]);
         /*
          * Notify manipulators manager
          */
@@ -919,8 +919,8 @@ int cmd_take_goldenium(char *args)
         /*
          * Set dynamixel angles
          */
-        dyn_set_angle(0, 0x01, 0x0368, manip_ctrl->dyn_speeds[0]);
-        dyn_set_angle(1, 0x02, 0x0288, manip_ctrl->dyn_speeds[1]);
+        dyn_set_angle(0, 0x01, 0x032a, manip_ctrl->dyn_speeds[0]);
+        dyn_set_angle(1, 0x02, 0x0292, manip_ctrl->dyn_speeds[1]);
         /*
          * Notify manipulators manager
          */
@@ -952,8 +952,8 @@ int cmd_lift_goldenium(char *args)
         /*
          * Set dynamixel angles
          */
-        dyn_set_angle(0, 0x01, 0x03be, manip_ctrl->dyn_speeds[0]);
-        dyn_set_angle(1, 0x02, 0x022d, manip_ctrl->dyn_speeds[1]);
+        dyn_set_angle(0, 0x01, 0x0355, manip_ctrl->dyn_speeds[0]);
+        dyn_set_angle(1, 0x02, 0x01cd, manip_ctrl->dyn_speeds[1]);
         /*
          * Notify manipulators manager
          */
