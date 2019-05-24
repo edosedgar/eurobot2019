@@ -346,6 +346,7 @@ void motor_kinematics(void *arg)
                 .session = ROBOT_SESSION_COMPETITION,
                 .cord_status = 0,
                 .strategy_num = 0,
+                .strategy_update_time = 0,
                 .side = ROBOT_SIDE_RIGHT,
                 .vel_x = 0.0f,
                 .vel_y = 0.0f,
@@ -547,11 +548,15 @@ void TIM7_IRQHandler(void)
 /*
  * Button interrupt handler
  */
-void EXTI0_IRQHandler(void)
+void EXTI9_5_IRQHandler(void)
 {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        mk_ctrl->strategy_num = (mk_ctrl->strategy_num + 1) % \
-                                NUMBER_OF_STRATEGIES;
+        uint16_t current_tick = xTaskGetTickCountFromISR();
+        if (current_tick > mk_ctrl->strategy_update_time + 10) {
+                mk_ctrl->strategy_num = (mk_ctrl->strategy_num + 1) % \
+                                         NUMBER_OF_STRATEGIES;
+        }
+        mk_ctrl->strategy_update_time = current_tick;
         LL_EXTI_ClearFlag_0_31(MOTOR_STRATEGY_EXTI_LINE);
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }

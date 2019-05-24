@@ -61,8 +61,8 @@
 /*
  * Strategy choose button pinout
  */
-#define MOTOR_STRATEGY_PORT                 GPIOA
-#define MOTOR_STRATEGY_PIN                  LL_GPIO_PIN_0
+#define MOTOR_STRATEGY_PORT                 GPIOD
+#define MOTOR_STRATEGY_PIN                  LL_GPIO_PIN_6
 
 /*
  * Side switcher

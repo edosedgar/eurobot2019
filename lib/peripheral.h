@@ -149,10 +149,10 @@
 /*
  * Exti setup for strategy choose
  */
-#define MOTOR_STRATEGY_SYS_EXTI_PORT            LL_SYSCFG_EXTI_PORTA
-#define MOTOR_STRATEGY_SYS_EXTI_LINE            LL_SYSCFG_EXTI_LINE0
-#define MOTOR_STRATEGY_EXTI_LINE                LL_EXTI_LINE_0
-#define MOTOR_STRATEGY_IRQN                     EXTI0_IRQn
+#define MOTOR_STRATEGY_SYS_EXTI_PORT            LL_SYSCFG_EXTI_PORTD
+#define MOTOR_STRATEGY_SYS_EXTI_LINE            LL_SYSCFG_EXTI_LINE6
+#define MOTOR_STRATEGY_EXTI_LINE                LL_EXTI_LINE_6
+#define MOTOR_STRATEGY_IRQN                     EXTI9_5_IRQn
 #define MOTOR_STRATEGY_IRQN_PRIORITY            (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY + 1)
 
 /*
