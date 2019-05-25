@@ -239,7 +239,7 @@ static void mk_hw_config()
         LL_SYSCFG_SetEXTISource(MOTOR_STRATEGY_SYS_EXTI_PORT,
                                 MOTOR_STRATEGY_SYS_EXTI_LINE);
         LL_EXTI_EnableIT_0_31(MOTOR_STRATEGY_EXTI_LINE);
-        LL_EXTI_EnableRisingTrig_0_31(MOTOR_STRATEGY_EXTI_LINE);
+        // LL_EXTI_EnableRisingTrig_0_31(MOTOR_STRATEGY_EXTI_LINE);
         LL_EXTI_EnableFallingTrig_0_31(MOTOR_STRATEGY_EXTI_LINE);
         NVIC_SetPriority(MOTOR_STRATEGY_IRQN, MOTOR_STRATEGY_IRQN_PRIORITY);
         NVIC_EnableIRQ(MOTOR_STRATEGY_IRQN);
@@ -552,7 +552,7 @@ void EXTI9_5_IRQHandler(void)
 {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         uint16_t current_tick = xTaskGetTickCountFromISR();
-        if (current_tick > mk_ctrl->strategy_update_time + 10) {
+        if (current_tick > mk_ctrl->strategy_update_time + 200) {
                 mk_ctrl->strategy_num = (mk_ctrl->strategy_num + 1) % \
                                          NUMBER_OF_STRATEGIES;
         }

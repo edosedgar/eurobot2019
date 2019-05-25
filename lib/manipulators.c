@@ -919,7 +919,7 @@ int cmd_take_goldenium(char *args)
         /*
          * Set dynamixel angles
          */
-        dyn_set_angle(0, 0x01, 0x032a, manip_ctrl->dyn_speeds[0]);
+        dyn_set_angle(0, 0x01, 0x0335, manip_ctrl->dyn_speeds[0]);
         dyn_set_angle(1, 0x02, 0x0292, manip_ctrl->dyn_speeds[1]);
         /*
          * Notify manipulators manager
