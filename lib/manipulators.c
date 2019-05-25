@@ -468,7 +468,7 @@ error_step_is_running:
  */
 int cmd_left_stick_default(char *args)
 {
-        stick_left_set_angle(135);
+        stick_left_set_angle(145);
         memcpy(args, "OK", 3);
         return 3;
 }
@@ -478,7 +478,7 @@ int cmd_left_stick_default(char *args)
  */
 int cmd_left_stick_down(char *args)
 {
-        stick_left_set_angle(222);
+        stick_left_set_angle(233);
         memcpy(args, "OK", 3);
         return 3;
 }
@@ -488,7 +488,7 @@ int cmd_left_stick_down(char *args)
  */
 int cmd_right_stick_default(char *args)
 {
-        stick_right_set_angle(180);
+        stick_right_set_angle(182);
         memcpy(args, "OK", 3);
         return 3;
 }
@@ -498,7 +498,29 @@ int cmd_right_stick_default(char *args)
  */
 int cmd_right_stick_down(char *args)
 {
-        stick_right_set_angle(92);
+        stick_right_set_angle(94);
+        memcpy(args, "OK", 3);
+        return 3;
+}
+
+/*
+ * Set releaser speed high for weight unloading
+ */
+int cmd_set_releaser_speed_low(char *args)
+{
+        manip_ctrl->dyn_speeds[3] = 0x0200;
+        dyn_set_speeds();
+        memcpy(args, "OK", 3);
+        return 3;
+}
+
+/*
+ * Set releaser speed low for ground unloading
+ */
+int cmd_set_releaser_speed_high(char *args)
+{
+        manip_ctrl->dyn_speeds[3] = 0x03ff;
+        dyn_set_speeds();
         memcpy(args, "OK", 3);
         return 3;
 }

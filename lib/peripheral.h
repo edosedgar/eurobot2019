@@ -108,8 +108,8 @@
 #define STICK_TIM                               TIM12
 #define STICK_TIM_ARR                           1999
 #define STICK_TIM_PSC                           839
-#define STEP_TIM_LEFT_CCR_INIT                  135
-#define STEP_TIM_RIGHT_CCR_INIT                 180
+#define STEP_TIM_LEFT_CCR_INIT                  145
+#define STEP_TIM_RIGHT_CCR_INIT                 182
 
 /*
  * Odometry configuration
