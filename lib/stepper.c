@@ -40,7 +40,7 @@ static void step_hw_config(void)
         /*
          * Timer initialization for all step motors control
          */
-        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM5);
+        LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM9);
         LL_TIM_SetCounterMode(STEP_TIM, STEP_TIM_MODE);
         LL_TIM_SetAutoReload(STEP_TIM, STEP_TIM_ARR);
         LL_TIM_SetPrescaler(STEP_TIM, STEP_TIM_PSC);
@@ -208,7 +208,7 @@ uint32_t step_get_current_step(uint8_t id)
 /*
  * Hardware interrupts
  */
-void TIM5_IRQHandler(void)
+void TIM1_BRK_TIM9_IRQHandler(void)
 {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         int i = 0;
