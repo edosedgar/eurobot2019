@@ -371,6 +371,10 @@ void manipulators_block(void)
          */
         step_stop_motors();
         manip_set_flag(manip_ctrl, BLOCK_STEPPER);
+        /*
+         * Turn off servos
+         */
+        stick_disable_torque();
         return;
 }
 
