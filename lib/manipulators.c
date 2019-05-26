@@ -166,6 +166,18 @@ static void manip_hw_config(void)
         return;
 }
 
+static void stick_enable_torque()
+{
+        LL_TIM_EnableCounter(STICK_TIM);
+        return;
+}
+
+static void stick_disable_torque()
+{
+        LL_TIM_DisableCounter(STICK_TIM);
+        return;
+}
+
 static void stick_left_set_angle(uint8_t angle)
 {
         LL_TIM_OC_SetCompareCH1(STICK_TIM, angle);
@@ -335,6 +347,7 @@ static void manip_default_pos(void)
         goal_step = cur_step + PACK_SIZE_IN_STEPS;
         step_set_step_goal(0, goal_step);
         dyn_set_init_pos();
+        stick_disable_torque();
         return;
 }
 
@@ -552,6 +565,7 @@ error_step_is_running:
 int cmd_left_stick_default(char *args)
 {
         stick_left_set_angle(145);
+        stick_enable_torque();
         memcpy(args, "OK", 3);
         return 3;
 }
@@ -562,6 +576,7 @@ int cmd_left_stick_default(char *args)
 int cmd_left_stick_down(char *args)
 {
         stick_left_set_angle(233);
+        stick_enable_torque();
         memcpy(args, "OK", 3);
         return 3;
 }
@@ -572,6 +587,7 @@ int cmd_left_stick_down(char *args)
 int cmd_right_stick_default(char *args)
 {
         stick_right_set_angle(182);
+        stick_enable_torque();
         memcpy(args, "OK", 3);
         return 3;
 }
@@ -582,6 +598,7 @@ int cmd_right_stick_default(char *args)
 int cmd_right_stick_down(char *args)
 {
         stick_right_set_angle(94);
+        stick_enable_torque();
         memcpy(args, "OK", 3);
         return 3;
 }
