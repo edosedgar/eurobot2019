@@ -579,7 +579,7 @@ int cmd_left_stick_default(char *args)
  */
 int cmd_left_stick_down(char *args)
 {
-        stick_left_set_angle(233);
+        stick_left_set_angle(200);
         stick_enable_torque();
         memcpy(args, "OK", 3);
         return 3;
@@ -601,7 +601,7 @@ int cmd_right_stick_default(char *args)
  */
 int cmd_right_stick_down(char *args)
 {
-        stick_right_set_angle(94);
+        stick_right_set_angle(120);
         stick_enable_torque();
         memcpy(args, "OK", 3);
         return 3;
