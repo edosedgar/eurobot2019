@@ -13,6 +13,7 @@
 #define ROBOT_SESSION_DEBUG             1
 #define ROBOT_SIDE_RIGHT                0
 #define ROBOT_SIDE_LEFT                 1
+#define NUMBER_OF_STRATEGIES            3
 
 /*
  * SET_PWM command args structure
@@ -42,14 +43,16 @@ typedef struct {
 enum motor_kinem_status_flags {
         MK_PWM_CONTROL_BIT,
         MK_SPEED_CONTROL_BIT,
-        MK_STOP_MOTORS_BIT
+        MK_STOP_MOTORS_BIT,
+        MK_BLOCK_MOTORS_BIT
 };
 
 #define ENUM_FLAG(name) name = 1 << name##_BIT
 enum mk_flags {
         ENUM_FLAG(MK_PWM_CONTROL),
         ENUM_FLAG(MK_SPEED_CONTROL),
-        ENUM_FLAG(MK_STOP_MOTORS)
+        ENUM_FLAG(MK_STOP_MOTORS),
+        ENUM_FLAG(MK_BLOCK_MOTORS)
 };
 
 #define is_manip_flag_set(manip_ctrl, bit) \
@@ -59,6 +62,8 @@ typedef struct {
         int status;
         uint8_t session;
         uint8_t cord_status;
+        uint8_t strategy_num;
+        uint16_t strategy_update_time;
         uint8_t side;
         float vel_x;
         float vel_y;

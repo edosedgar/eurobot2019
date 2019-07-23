@@ -7,7 +7,7 @@
 #include "dev_map.h"
 
 #define STEPS_PER_REVOLUTION        200
-#define PACK_SIZE_IN_STEPS          620
+#define PACK_SIZE_IN_STEPS          624
 #define NUMBER_OF_PACKS             7
 #define MAX_STEPS                   NUMBER_OF_PACKS * PACK_SIZE_IN_STEPS
 
@@ -59,6 +59,7 @@ typedef struct {
 } step_ctrl_t;
 
 void step_init(void);
+void step_stop_motors(void);
 int step_start_calibration(uint8_t id);
 int step_is_calibrated(uint8_t id);
 int step_is_running(uint8_t id);

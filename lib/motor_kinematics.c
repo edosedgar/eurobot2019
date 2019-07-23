@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "motor_kinematics.h"
+#include "manipulators.h"
 #include "peripheral.h"
 #include "gpio_map.h"
 
@@ -227,6 +228,22 @@ static void mk_hw_config()
         LL_GPIO_SetPinMode(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_MODE_INPUT);
         LL_GPIO_SetPinPull(MOTOR_CORD_PORT, MOTOR_CORD_PIN, LL_GPIO_PULL_NO);
 
+        /* Setting strategy button */
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
+        LL_GPIO_SetPinMode(MOTOR_STRATEGY_PORT, MOTOR_STRATEGY_PIN,
+                           LL_GPIO_MODE_INPUT);
+        LL_GPIO_SetPinPull(MOTOR_STRATEGY_PORT, MOTOR_STRATEGY_PIN,
+                           LL_GPIO_PULL_NO);
+        /* Setting up interrupt */
+        LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+        LL_SYSCFG_SetEXTISource(MOTOR_STRATEGY_SYS_EXTI_PORT,
+                                MOTOR_STRATEGY_SYS_EXTI_LINE);
+        LL_EXTI_EnableIT_0_31(MOTOR_STRATEGY_EXTI_LINE);
+        // LL_EXTI_EnableRisingTrig_0_31(MOTOR_STRATEGY_EXTI_LINE);
+        LL_EXTI_EnableFallingTrig_0_31(MOTOR_STRATEGY_EXTI_LINE);
+        NVIC_SetPriority(MOTOR_STRATEGY_IRQN, MOTOR_STRATEGY_IRQN_PRIORITY);
+        NVIC_EnableIRQ(MOTOR_STRATEGY_IRQN);
+
         /* Setting side switcher pin */
         LL_GPIO_SetPinMode(MOTOR_SIDE_SW_PORT, MOTOR_SIDE_SW_PIN,
                            LL_GPIO_MODE_INPUT);
@@ -267,6 +284,12 @@ static void mk_set_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
         return;
 }
 
+static void mk_set_block_motors_ctrl(motors_ctrl_t *mk_ctrl)
+{
+        mk_ctrl->status |= MK_BLOCK_MOTORS;
+        return;
+}
+
 static void mk_clr_stop_motors_ctrl(motors_ctrl_t *mk_ctrl)
 {
         mk_ctrl->status &= ~(MK_STOP_MOTORS);
@@ -282,6 +305,22 @@ static uint8_t read_side_switch(void)
 {
         return (uint8_t) LL_GPIO_IsInputPinSet(MOTOR_SIDE_SW_PORT,
                                                MOTOR_SIDE_SW_PIN);
+}
+
+static void turn_off_all_motors(void)
+{
+        static float stop_motors[] = {0.0f, 0.0f, 0.0f};
+
+        /*
+         * Turn off maxons
+         */
+        mk_set_block_motors_ctrl(mk_ctrl);
+        mk_set_pwm(stop_motors);
+        /*
+         * Turn off manipulators
+         */
+        manipulators_block();
+        return;
 }
 
 /*
@@ -306,6 +345,8 @@ void motor_kinematics(void *arg)
                 .status = 0x00,
                 .session = ROBOT_SESSION_COMPETITION,
                 .cord_status = 0,
+                .strategy_num = 0,
+                .strategy_update_time = 0,
                 .side = ROBOT_SIDE_RIGHT,
                 .vel_x = 0.0f,
                 .vel_y = 0.0f,
@@ -326,6 +367,12 @@ void motor_kinematics(void *arg)
         while (1) {
                 ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
                 xSemaphoreTake(mk_ctrl->lock, portMAX_DELAY);
+                /*
+                 * If motors are blocked don't do anything
+                 */
+                if(mk_ctrl->status & MK_BLOCK_MOTORS) {
+                    continue;
+                }
                 /*
                  * If one stopped motors immediately reset all pwm values
                  */
@@ -387,7 +434,8 @@ int cmd_read_cord_status(void *args)
         mk_ctrl->cord_status = read_cord_status();
         if (mk_ctrl->cord_status == 1) {
                 mk_clr_stop_motors_ctrl(mk_ctrl);
-                LL_TIM_EnableCounter(MOTOR_OPERATING_TIM);
+                if (!LL_TIM_IsEnabledCounter(MOTOR_OPERATING_TIM))
+                        LL_TIM_EnableCounter(MOTOR_OPERATING_TIM);
                 xTaskNotifyGive(mk_ctrl->mk_notify);
         }
         memcpy(args, &mk_ctrl->cord_status, 1);
@@ -401,6 +449,14 @@ int cmd_read_side_switch(void *args)
 {
         mk_ctrl->side = read_side_switch();
         memcpy(args, &mk_ctrl->side, 1);
+        return 1;
+}
+/*
+ * Command for readung current strategy determined by external button
+ */
+int cmd_read_strategy(void *args)
+{
+        memcpy(args, &mk_ctrl->strategy_num, 1);
         return 1;
 }
 
@@ -470,7 +526,6 @@ error_set_speed:
         return 3;
 }
 
-
 /*
  * Robot operating timer
  */
@@ -478,16 +533,30 @@ void TIM7_IRQHandler(void)
 {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         static uint32_t seconds_from_start = 0;
-        static float stop_motors[] = {0.0f, 0.0f, 0.0f};
 
         if (LL_TIM_IsActiveFlag_UPDATE(MOTOR_OPERATING_TIM)) {
                 LL_TIM_ClearFlag_UPDATE(MOTOR_OPERATING_TIM);
                 seconds_from_start++;
                 if (seconds_from_start >= MOTOR_OPERATING_TIME &&
                     mk_ctrl->session != ROBOT_SESSION_DEBUG) {
-                        mk_set_stop_motors_ctrl(mk_ctrl);
-                        mk_set_pwm(stop_motors);
+                        turn_off_all_motors();
                 }
         }
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+/*
+ * Button interrupt handler
+ */
+void EXTI9_5_IRQHandler(void)
+{
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        uint16_t current_tick = xTaskGetTickCountFromISR();
+        if (current_tick > mk_ctrl->strategy_update_time + 200) {
+                mk_ctrl->strategy_num = (mk_ctrl->strategy_num + 1) % \
+                                         NUMBER_OF_STRATEGIES;
+        }
+        mk_ctrl->strategy_update_time = current_tick;
+        LL_EXTI_ClearFlag_0_31(MOTOR_STRATEGY_EXTI_LINE);
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
