@@ -56,13 +56,33 @@
  * Starting cord pinout
  */
 #define MOTOR_CORD_PORT                     GPIOD
-#define MOTOR_CORD_PIN                      LL_GPIO_PIN_3
+#define MOTOR_CORD_PIN                      LL_GPIO_PIN_2
+
+/*
+ * Strategy choose button pinout
+ */
+#define MOTOR_STRATEGY_PORT                 GPIOD
+#define MOTOR_STRATEGY_PIN                  LL_GPIO_PIN_6
 
 /*
  * Side switcher
  */
 #define MOTOR_SIDE_SW_PORT                  GPIOD
-#define MOTOR_SIDE_SW_PIN                   LL_GPIO_PIN_7
+#define MOTOR_SIDE_SW_PIN                   LL_GPIO_PIN_8
+
+/*
+ * Pack checking pinout
+ */
+#define MANIP_PACK_CHECK_PORT               GPIOE
+#define MANIP_PACK_CHECK_PIN                LL_GPIO_PIN_4
+
+/*
+ * Servo motors pinout
+ */
+#define STICK_PORT                          GPIOB
+#define STICK_LEFT_PIN                      LL_GPIO_PIN_14
+#define STICK_RIGHT_PIN                     LL_GPIO_PIN_15
+#define STICK_PIN_AF                        LL_GPIO_AF_9
 
 /*
  * Odometry pinout
@@ -96,9 +116,15 @@
 #define STEP_MOTOR_P4                       LL_GPIO_PIN_5
 
 /*
+ * Barometer ADC pinout
+ */
+#define BAR_PORT                            GPIOC
+#define BAR_PIN                             LL_GPIO_PIN_2
+
+/*
  * Limit switch pin for step motor calibration
  */
-#define STEP_LIMIT_SWITCH_PORT             GPIOD
-#define STEP_LIMIT_SWITCH_PIN              LL_GPIO_PIN_0
+#define STEP_LIMIT_SWITCH_PORT              GPIOD
+#define STEP_LIMIT_SWITCH_PIN               LL_GPIO_PIN_0
 
 #endif

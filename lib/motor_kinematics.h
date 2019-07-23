@@ -8,11 +8,12 @@
 /*
  * Robot's movement time allowed in seconds
  */
-#define MOTOR_OPERATING_TIME           99
+#define MOTOR_OPERATING_TIME           100
 #define ROBOT_SESSION_COMPETITION       0
 #define ROBOT_SESSION_DEBUG             1
 #define ROBOT_SIDE_RIGHT                0
 #define ROBOT_SIDE_LEFT                 1
+#define NUMBER_OF_STRATEGIES            3
 
 /*
  * SET_PWM command args structure
@@ -59,6 +60,8 @@ typedef struct {
         int status;
         uint8_t session;
         uint8_t cord_status;
+        uint8_t strategy_num;
+        uint16_t strategy_update_time;
         uint8_t side;
         float vel_x;
         float vel_y;

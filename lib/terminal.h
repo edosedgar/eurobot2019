@@ -17,10 +17,13 @@ typedef struct {
         char *buffer;
         char *com_args;
         char *com_resp;
+        uint8_t *stm_dr_buff;
+        TaskHandle_t xTaskToNotify;
 } terminal_task_t;
 
 #define TERM_CH_BUF_SIZE        256
 #define TERM_ARGS_BUF_SIZE      128
+#define TERM_STM_DR_BUF_SIZE    10
 #define TERM_MAN_STACK_DEPTH    1024
 #define IS_COMMAND_VALID(com) (((com) > LOWER_BOUND_CMD) && \
                                ((com) < UPPER_BOUND_CMD))
